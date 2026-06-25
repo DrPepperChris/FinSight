@@ -4,6 +4,9 @@ using FinSight.Core.Services;
 using FinSight.Data.Context;
 using FinSight.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
+using FluentValidation.AspNetCore;
+using FinSight.Api.Validators;
+using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +19,9 @@ builder.Services.AddScoped<ICustomerService, CustomerService>();
 
 builder.Services.AddControllers();
 
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddFluentValidationClientsideAdapters();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateCustomerRequestValidator>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
