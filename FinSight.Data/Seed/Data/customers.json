@@ -1,0 +1,37 @@
+﻿[
+  {
+    "customerNumber": "CUST-5001",
+    "firstName": "Ethan",
+    "lastName": "Sullivan",
+    "email": "ethan.sullivan@demo.com",
+    "riskRating": "Low"
+  },
+  {
+    "customerNumber": "CUST-5002",
+    "firstName": "Mia",
+    "lastName": "Thompson",
+    "email": "mia.thompson@demo.com",
+    "riskRating": "Low"
+  },
+  {
+    "customerNumber": "CUST-5003",
+    "firstName": "Noah",
+    "lastName": "Carter",
+    "email": "noah.carter@demo.com",
+    "riskRating": "Medium"
+  },
+  {
+    "customerNumber": "CUST-5004",
+    "firstName": "Sophia",
+    "lastName": "Bennett",
+    "email": "sophia.bennett@demo.com",
+    "riskRating": "High"
+  },
+  {
+    "customerNumber": "CUST-5005",
+    "firstName": "Lucas",
+    "lastName": "Brooks",
+    "email": "lucas.brooks@demo.com",
+    "riskRating": "Medium"
+  }
+]

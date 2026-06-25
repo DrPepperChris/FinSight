@@ -23,4 +23,13 @@
     <ProjectReference Include="..\FinSight.Core\FinSight.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Seed\Data\customers.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Seed\Data\users.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
