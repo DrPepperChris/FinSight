@@ -1,10 +1,12 @@
 ﻿using FinSight.Core.DTOs;
 using FinSight.Core.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FinSight.Api.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api/[controller]")]
     public class CustomersController : ControllerBase
     {
@@ -16,6 +18,7 @@ namespace FinSight.Api.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin,Analyst,Auditor")]
         public async Task<ActionResult<IEnumerable<CustomerDto>>> GetCustomers()
         {
             var customers = await _customerService.GetCustomersAsync();
@@ -23,6 +26,7 @@ namespace FinSight.Api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin,Analyst")]
         public async Task<ActionResult<CustomerDto>> CreateCustomer(CreateCustomerRequest request)
         {
             var customer = await _customerService.CreateCustomerAsync(request);
