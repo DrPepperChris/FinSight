@@ -26,32 +26,46 @@ namespace FinSight.Api.Middleware
             {
                 _logger.LogWarning(ex, "Business rule violation.");
 
-                context.Response.StatusCode = (int)HttpStatusCode.Conflict;
-                context.Response.ContentType = "application/json";
+                await WriteErrorResponseAsync(
+                    context,
+                    HttpStatusCode.Conflict,
+                    ex.Message);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogWarning(ex, "Unauthorized access attempt.");
 
-                var response = new
-                {
-                    statusCode = context.Response.StatusCode,
-                    message = ex.Message
-                };
-
-                await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+                await WriteErrorResponseAsync(
+                    context,
+                    HttpStatusCode.Unauthorized,
+                    ex.Message);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unhandled exception.");
 
-                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                context.Response.ContentType = "application/json";
-
-                var response = new
-                {
-                    statusCode = context.Response.StatusCode,
-                    message = "An unexpected error occurred."
-                };
-
-                await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+                await WriteErrorResponseAsync(
+                    context,
+                    HttpStatusCode.InternalServerError,
+                    "An unexpected error occurred.");
             }
+        }
+
+        private static async Task WriteErrorResponseAsync(
+            HttpContext context,
+            HttpStatusCode statusCode,
+            string message)
+        {
+            context.Response.StatusCode = (int)statusCode;
+            context.Response.ContentType = "application/json";
+
+            var response = new
+            {
+                statusCode = context.Response.StatusCode,
+                message
+            };
+
+            await context.Response.WriteAsync(JsonSerializer.Serialize(response));
         }
     }
 }

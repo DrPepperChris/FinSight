@@ -1,0 +1,17 @@
+﻿[
+  {
+    "userName": "admin",
+    "email": "admin@finsight.demo",
+    "role": "Admin"
+  },
+  {
+    "userName": "analyst",
+    "email": "analyst@finsight.demo",
+    "role": "Analyst"
+  },
+  {
+    "userName": "auditor",
+    "email": "auditor@finsight.demo",
+    "role": "Auditor"
+  }
+]

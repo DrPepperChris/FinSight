@@ -18,6 +18,7 @@ namespace FinSight.Data.Context
         public DbSet<FraudAlert> FraudAlerts => Set<FraudAlert>();
         public DbSet<ApplicationUser> ApplicationUsers => Set<ApplicationUser>();
         public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+        public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
