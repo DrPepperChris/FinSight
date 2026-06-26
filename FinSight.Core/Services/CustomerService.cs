@@ -18,20 +18,26 @@ namespace FinSight.Core.Services
             _logger = logger;
         }
 
-        public async Task<IEnumerable<CustomerDto>> GetCustomersAsync()
+        public async Task<PagedResult<CustomerDto>> GetCustomersAsync(CustomerQueryParameters query)
         {
-            _logger.LogInformation("Retrieving customers.");
+            _logger.LogInformation("Retrieving customers with search and paging.");
 
-            var customers = await _customerRepository.GetAllAsync();
+            var pagedCustomers = await _customerRepository.GetCustomersAsync(query);
 
-            return customers.Select(c => new CustomerDto
+            return new PagedResult<CustomerDto>
             {
-                Id = c.Id,
-                CustomerNumber = c.CustomerNumber,
-                FullName = c.FirstName + " " + c.LastName,
-                Email = c.Email,
-                RiskRating = c.RiskRating
-            });
+                Items = pagedCustomers.Items.Select(c => new CustomerDto
+                {
+                    Id = c.Id,
+                    CustomerNumber = c.CustomerNumber,
+                    FullName = c.FirstName + " " + c.LastName,
+                    Email = c.Email,
+                    RiskRating = c.RiskRating
+                }),
+                Page = pagedCustomers.Page,
+                PageSize = pagedCustomers.PageSize,
+                TotalRecords = pagedCustomers.TotalRecords
+            };
         }
 
         public async Task<CustomerDto> CreateCustomerAsync(CreateCustomerRequest request)

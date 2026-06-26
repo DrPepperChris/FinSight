@@ -4,7 +4,7 @@ namespace FinSight.Core.Interfaces
 {
     public interface ICustomerService
     {
-        Task<IEnumerable<CustomerDto>> GetCustomersAsync();
+        Task<PagedResult<CustomerDto>> GetCustomersAsync(CustomerQueryParameters query);
         Task<CustomerDto> CreateCustomerAsync(CreateCustomerRequest request);
     }
 }

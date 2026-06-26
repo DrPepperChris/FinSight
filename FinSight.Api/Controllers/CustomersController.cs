@@ -19,9 +19,10 @@ namespace FinSight.Api.Controllers
 
         [HttpGet]
         [Authorize(Roles = "Admin,Analyst,Auditor")]
-        public async Task<ActionResult<IEnumerable<CustomerDto>>> GetCustomers()
+        public async Task<ActionResult<PagedResult<CustomerDto>>> GetCustomers(
+            [FromQuery] CustomerQueryParameters query)
         {
-            var customers = await _customerService.GetCustomersAsync();
+            var customers = await _customerService.GetCustomersAsync(query);
             return Ok(customers);
         }
 
