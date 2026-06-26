@@ -23,8 +23,16 @@ namespace FinSight.Data.Context
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Account>()
-                .Property(a => a.Balance)
+                .Property(a => a.CurrentBalance)
                 .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Account>()
+                .Property(a => a.AvailableBalance)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Account>()
+                .Property(a => a.InterestRate)
+                .HasPrecision(5, 2);
 
             modelBuilder.Entity<BankTransaction>()
                 .Property(t => t.Amount)
