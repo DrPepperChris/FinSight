@@ -1,128 +1,70 @@
-## Development Roadmap
+# FinSight
 
-### Phase 1 – Enterprise Backend Foundation "Complete"
+Enterprise banking platform built with ASP.NET Core, SQL Server, Azure, and Clean Architecture.
 
-* Clean Architecture
-* Repository Pattern
-* Service Layer
-* Entity Framework Core
-* SQL Server
-* DTO Mapping
-* Global Exception Middleware
-* FluentValidation
-* Unit Testing (xUnit, Moq, FluentAssertions)
+## Features
 
----
+- JWT Authentication & Role-Based Authorization
+- Customer Management
+- Account Management
+- Deposit Processing
+- Transaction History
+- Audit Logging
+- Global Exception Handling
+- FluentValidation
+- Repository + Unit of Work Patterns
+- SQL Server & Entity Framework Core
+- Swagger / OpenAPI
+- Unit Testing
 
-### Phase 2 – Authentication & Security "Complete"
+## Tech Stack
 
-* JWT Authentication
-* Password Hashing
-* Refresh Tokens
-* Login & Registration APIs
-* Authentication Unit Tests
-* Role-Based User Model
+- ASP.NET Core 6
+- C#
+- SQL Server
+- Entity Framework Core
+- JWT
+- xUnit
+- Moq
+- FluentAssertions
+- Azure (in progress)
 
-**Next Improvements**
+## Architecture
 
-* Swagger JWT Authorization
-* Role-Based Authorization
-* Password Policy Validation
-* Refresh Token Endpoint
-* Authorization Integration Tests
+```
+API
+ ↓
+Services
+ ↓
+Repositories
+ ↓
+Unit of Work
+ ↓
+SQL Server
+```
 
----
+## Current Status
 
-### Phase 3 – Banking Domain
+✔ Customer Management
 
-* Customer Management
-* Account Management
-* Transaction Processing
-* Loan Applications
-* Fraud Alerts
-* Risk Assessments
+✔ Account Management
 
----
+✔ Deposit Processing
 
-### Phase 4 – Reporting & Analytics
+✔ Transaction History
 
-* Executive Dashboard
-* Customer Portfolio Reports
-* Loan Performance Reports
-* Fraud Analytics
-* PDF Report Generation
-* CSV Export
-* Interactive Charts
+🚧 Withdrawals
 
----
+🚧 Account Transfers
 
-### Phase 5 – React Frontend
+🚧 Loan Processing
 
-* React + TypeScript
-* Material UI
-* Secure Login
-* Dashboard
-* Customer Search
-* Report Viewer
-* Role-Based Navigation
-* Responsive Design
+## Roadmap
 
----
-
-### Phase 6 – Data Engineering
-
-* Azure Databricks
-* Delta Lake
-* Medallion Architecture
-
-  * Bronze
-  * Silver
-  * Gold
-* ETL Pipelines
-* Azure SQL Publishing
-* Data Quality Validation
-* Pipeline Monitoring
-
----
-
-### Phase 7 – Cloud Deployment
-
-* Azure App Service
-* Azure SQL Database
-* Azure Storage
-* Azure Key Vault
-* Azure Application Insights
-* Environment Configuration
-* CI/CD Pipeline
-* GitHub Actions
-* Infrastructure Documentation
-
----
-
-### Phase 8 – Enterprise Readiness
-
-* API Versioning
-* Serilog Structured Logging
-* Health Checks
-* Performance Testing
-* Load Testing
-* Docker Support
-* Kubernetes Deployment
-* OpenAPI Documentation
-* Security Hardening
-* Production Monitoring
-
----
-
-### Phase 9 – Portfolio & Showcase
-
-* Architecture Documentation
-* Database Design Documentation
-* API Documentation
-* Databricks Notebook Walkthroughs
-* Demo Dataset
-* Screenshots & GIFs
-* Video Walkthrough
-* Deployment Guide
-* Recruiter-Friendly README
-* Public Azure Demo Environment
+- React Frontend
+- Azure Databricks Analytics
+- Azure App Service Deployment
+- Azure SQL Database
+- GitHub Actions CI/CD
+- Docker
+- Application Insights
