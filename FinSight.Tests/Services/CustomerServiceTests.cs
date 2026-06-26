@@ -15,27 +15,34 @@ namespace FinSight.Tests.Services
         {
             var repository = new Mock<ICustomerRepository>();
 
-            repository.Setup(r => r.GetAllAsync())
-                .ReturnsAsync(new List<Customer>
+            repository.Setup(r => r.GetCustomersAsync(It.IsAny<CustomerQueryParameters>()))
+                .ReturnsAsync(new PagedResult<Customer>
                 {
-                    new Customer
+                    Items = new List<Customer>
                     {
-                        Id = 1,
-                        CustomerNumber = "CUST-1001",
-                        FirstName = "Avery",
-                        LastName = "Morgan",
-                        Email = "avery.morgan@demo.com",
-                        RiskRating = "Low"
-                    }
+                        new Customer
+                        {
+                            Id = 1,
+                            CustomerNumber = "CUST-1001",
+                            FirstName = "Avery",
+                            LastName = "Morgan",
+                            Email = "avery.morgan@demo.com",
+                            RiskRating = "Low"
+                        }
+                    },
+                    Page = 1,
+                    PageSize = 10,
+                    TotalRecords = 1
                 });
 
             var logger = new Mock<ILogger<CustomerService>>();
             var service = new CustomerService(repository.Object, logger.Object);
 
-            var result = await service.GetCustomersAsync();
+            var result = await service.GetCustomersAsync(new CustomerQueryParameters());
 
-            result.Should().ContainSingle();
-            result.First().FullName.Should().Be("Avery Morgan");
+            result.Items.Should().ContainSingle();
+            result.Items.First().FullName.Should().Be("Avery Morgan");
+            result.TotalRecords.Should().Be(1);
         }
 
         [Fact]
