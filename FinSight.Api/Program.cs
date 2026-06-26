@@ -37,6 +37,8 @@ builder.Services.AddScoped<IDepositService, DepositService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<IWithdrawalService, WithdrawalService>();
 builder.Services.AddScoped<ITransferService, TransferService>();
+builder.Services.AddScoped<ILoanApplicationRepository, LoanApplicationRepository>();
+builder.Services.AddScoped<ILoanApplicationService, LoanApplicationService>();
 
 // Validation
 builder.Services.AddControllers(options =>
