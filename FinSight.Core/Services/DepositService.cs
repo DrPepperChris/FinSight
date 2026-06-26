@@ -23,11 +23,6 @@ namespace FinSight.Core.Services
 
         public async Task<TransactionDto> DepositAsync(int accountId, DepositRequest request)
         {
-            if (request.Amount <= 0)
-            {
-                throw new InvalidOperationException("Deposit amount must be greater than zero.");
-            }
-
             var account = await _accountRepository.GetByIdAsync(accountId);
 
             if (account == null)

@@ -23,11 +23,7 @@ namespace FinSight.Core.Services
 
         public async Task<TransactionDto> WithdrawAsync(int accountId, WithdrawalRequest request)
         {
-            if (request.Amount <= 0)
-            {
-                throw new InvalidOperationException("Withdrawal amount must be greater than zero.");
-            }
-
+      
             var account = await _accountRepository.GetByIdAsync(accountId);
 
             if (account == null)
