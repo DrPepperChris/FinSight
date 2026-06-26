@@ -7,8 +7,9 @@ Enterprise banking platform built with ASP.NET Core, SQL Server, Azure, and Clea
 - JWT Authentication & Role-Based Authorization
 - Customer Management
 - Account Management
-- Deposit Processing
+- Deposit, Withdrawal, and Transfer Processing
 - Transaction History
+- Loan Application Workflow
 - Audit Logging
 - Global Exception Handling
 - FluentValidation
@@ -27,11 +28,11 @@ Enterprise banking platform built with ASP.NET Core, SQL Server, Azure, and Clea
 - xUnit
 - Moq
 - FluentAssertions
-- Azure (in progress)
+- Azure planned
 
 ## Architecture
 
-```
+```text
 API
  ↓
 Services
@@ -41,30 +42,3 @@ Repositories
 Unit of Work
  ↓
 SQL Server
-```
-
-## Current Status
-
-✔ Customer Management
-
-✔ Account Management
-
-✔ Deposit Processing
-
-✔ Transaction History
-
-🚧 Withdrawals
-
-🚧 Account Transfers
-
-🚧 Loan Processing
-
-## Roadmap
-
-- React Frontend
-- Azure Databricks Analytics
-- Azure App Service Deployment
-- Azure SQL Database
-- GitHub Actions CI/CD
-- Docker
-- Application Insights
