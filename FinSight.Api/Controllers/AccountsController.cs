@@ -11,10 +11,17 @@ namespace FinSight.Api.Controllers
     public class AccountsController : ControllerBase
     {
         private readonly IAccountService _accountService;
+        private readonly IDepositService _depositService;
+        private readonly ITransactionService _transactionService;
 
-        public AccountsController(IAccountService accountService)
+        public AccountsController(
+            IAccountService accountService,
+            IDepositService depositService,
+            ITransactionService transactionService)
         {
             _accountService = accountService;
+            _depositService = depositService;
+            _transactionService = transactionService;
         }
 
         [HttpGet]
@@ -32,6 +39,26 @@ namespace FinSight.Api.Controllers
         {
             var account = await _accountService.CreateAccountAsync(request);
             return CreatedAtAction(nameof(GetAccounts), new { id = account.Id }, account);
+        }
+
+        [HttpPost("{accountId}/deposit")]
+        [Authorize(Roles = "Admin,Analyst")]
+        public async Task<ActionResult<TransactionDto>> Deposit(
+            int accountId,
+            DepositRequest request)
+        {
+            var transaction = await _depositService.DepositAsync(accountId, request);
+            return Ok(transaction);
+        }
+
+
+        [HttpGet("{accountId}/transactions")]
+        [Authorize(Roles = "Admin,Analyst,Auditor")]
+        public async Task<ActionResult<IEnumerable<TransactionDto>>> GetTransactions(
+            int accountId)
+        {
+            var transactions = await _transactionService.GetTransactionsByAccountIdAsync(accountId);
+            return Ok(transactions);
         }
     }
 }
