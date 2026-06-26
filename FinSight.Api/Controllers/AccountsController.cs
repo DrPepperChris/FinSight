@@ -13,15 +13,21 @@ namespace FinSight.Api.Controllers
         private readonly IAccountService _accountService;
         private readonly IDepositService _depositService;
         private readonly ITransactionService _transactionService;
+        private readonly IWithdrawalService _withdrawalService;
+        private readonly ITransferService _transferService;
 
         public AccountsController(
             IAccountService accountService,
             IDepositService depositService,
-            ITransactionService transactionService)
+            IWithdrawalService withdrawalService,
+            ITransactionService transactionService,
+            ITransferService transferService)
         {
             _accountService = accountService;
             _depositService = depositService;
+            _withdrawalService = withdrawalService;
             _transactionService = transactionService;
+            _transferService = transferService;
         }
 
         [HttpGet]
@@ -60,5 +66,25 @@ namespace FinSight.Api.Controllers
             var transactions = await _transactionService.GetTransactionsByAccountIdAsync(accountId);
             return Ok(transactions);
         }
+
+        [HttpPost("{accountId}/withdraw")]
+        [Authorize(Roles = "Admin,Analyst")]
+        public async Task<ActionResult<TransactionDto>> Withdraw(
+            int accountId,
+            WithdrawalRequest request)
+        {
+            var transaction = await _withdrawalService.WithdrawAsync(accountId, request);
+            return Ok(transaction);
+        }
+
+        [HttpPost("transfer")]
+        [Authorize(Roles = "Admin,Analyst")]
+        public async Task<ActionResult<IEnumerable<TransactionDto>>> Transfer(
+            TransferRequest request)
+        {
+            var transactions = await _transferService.TransferAsync(request);
+            return Ok(transactions);
+        }
+
     }
 }
