@@ -9,7 +9,7 @@ namespace FinSight.Data.Repositories
     public class AccountRepository : IAccountRepository
     {
         private readonly FinSightDbContext _context;
-
+        
         public AccountRepository(FinSightDbContext context)
         {
             _context = context;
@@ -105,6 +105,12 @@ namespace FinSight.Data.Repositories
             _context.Accounts.Add(account);
             await _context.SaveChangesAsync();
             return account;
+        }
+        public async Task<Account?> GetByIdAsync(int accountId)
+        {
+            return await _context.Accounts
+                .Include(a => a.Customer)
+                .FirstOrDefaultAsync(a => a.Id == accountId);
         }
     }
 }

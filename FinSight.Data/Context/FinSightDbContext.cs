@@ -54,6 +54,14 @@ namespace FinSight.Data.Context
                 .HasOne(r => r.ApplicationUser)
                 .WithMany()
                 .HasForeignKey(r => r.ApplicationUserId);
+
+            modelBuilder.Entity<BankTransaction>()
+                .Property(t => t.Amount)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<BankTransaction>()
+                .Property(t => t.BalanceAfterTransaction)
+                .HasPrecision(18, 2);
         }
     }
 }

@@ -14,6 +14,7 @@ using System.Text;
 using Microsoft.OpenApi.Models;
 using FinSight.Api.Filters;
 using FinSight.Data.Seed;
+using FinSight.Data.UnitOfWork;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,7 +31,10 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IAccountService, AccountService>();
-
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+builder.Services.AddScoped<IDepositService, DepositService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
 // Validation
 builder.Services.AddControllers(options =>
 {

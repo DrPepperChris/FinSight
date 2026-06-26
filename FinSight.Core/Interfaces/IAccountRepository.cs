@@ -9,5 +9,6 @@ namespace FinSight.Core.Interfaces
         Task<bool> AccountExistsAsync(string accountNumber);
         Task<bool> CustomerExistsAsync(int customerId);
         Task<Account> AddAsync(Account account);
+        Task<Account?> GetByIdAsync(int accountId);
     }
 }
