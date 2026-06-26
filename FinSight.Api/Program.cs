@@ -35,6 +35,9 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<IDepositService, DepositService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddScoped<IWithdrawalService, WithdrawalService>();
+builder.Services.AddScoped<ITransferService, TransferService>();
+
 // Validation
 builder.Services.AddControllers(options =>
 {
