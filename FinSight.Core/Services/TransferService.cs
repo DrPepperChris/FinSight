@@ -23,9 +23,7 @@ namespace FinSight.Core.Services
 
         public async Task<IEnumerable<TransactionDto>> TransferAsync(TransferRequest request)
         {
-            if (request.Amount <= 0)
-                throw new InvalidOperationException("Transfer amount must be greater than zero.");
-
+           
             if (request.FromAccountId == request.ToAccountId)
                 throw new InvalidOperationException("Cannot transfer to the same account.");
 
