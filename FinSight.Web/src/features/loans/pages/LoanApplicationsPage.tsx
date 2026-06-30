@@ -98,13 +98,34 @@ export function LoanApplicationsPage() {
     }
 
     function getPurpose(loanApplication: LoanApplication) {
-        return loanApplication.loanPurpose ?? loanApplication.purpose ?? "-";
+        const apiLoanApplication = loanApplication as LoanApplication & {
+            LoanType?: string;
+            LoanPurpose?: string;
+            Purpose?: string;
+        };
+
+        return (
+            loanApplication.loanType ??
+            apiLoanApplication.LoanType ??
+            loanApplication.loanPurpose ??
+            apiLoanApplication.LoanPurpose ??
+            loanApplication.purpose ??
+            apiLoanApplication.Purpose ??
+            "-"
+        );
     }
 
     function getStatus(loanApplication: LoanApplication) {
+        const apiLoanApplication = loanApplication as LoanApplication & {
+            Status?: string | number;
+            ApplicationStatus?: string | number;
+        };
+
         return (
             loanApplication.status ??
+            apiLoanApplication.Status ??
             loanApplication.applicationStatus ??
+            apiLoanApplication.ApplicationStatus ??
             "-"
         );
     }
@@ -155,11 +176,10 @@ export function LoanApplicationsPage() {
 
                         <tbody>
                             {loanApplications.map((loanApplication) => {
-                                const status = getStatus(loanApplication);
+                                const status = String(getStatus(loanApplication));
                                 const isFinal =
                                     status.toLowerCase() === "approved" ||
                                     status.toLowerCase() === "rejected";
-
                                 return (
                                     <tr key={loanApplication.id}>
                                         <td>

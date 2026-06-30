@@ -1,23 +1,47 @@
+export type LoanType =
+    | "Auto"
+    | "Personal"
+    | "Mortgage"
+    | "Business"
+    | "Student"
+    | "DebtConsolidation"
+    | "Other";
+
 export interface LoanApplication {
     id: number;
     customerId?: number;
     customerName?: string;
+    applicationNumber?: string;
+
     requestedAmount?: number;
     loanAmount?: number;
     amount?: number;
+
+    loanType?: LoanType | string;
+    LoanType?: LoanType | string;
+
     loanPurpose?: string;
+    LoanPurpose?: string;
+
     purpose?: string;
-    status?: string;
-    applicationStatus?: string;
+    Purpose?: string;
+
+    status?: string | number;
+    Status?: string | number;
+
+    applicationStatus?: string | number;
+    ApplicationStatus?: string | number;
+
     createdDate?: string;
     submittedDate?: string;
+    applicationDate?: string;
     decisionDate?: string;
 }
 
 export interface CreateLoanApplicationRequest {
     customerId: number;
     requestedAmount: number;
-    loanPurpose: string;
+    loanType: LoanType;
 }
 
 export interface PagedResult<T> {
