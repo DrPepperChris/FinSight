@@ -200,3 +200,23 @@ select {
         background-color: #1e293b;
         color: #e5e7eb;
     }
+
+.table-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.small-button {
+    padding: 0.45rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+.danger-button {
+    background: #b91c1c;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
