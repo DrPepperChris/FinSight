@@ -1,29 +1,34 @@
+using FinSight.Api.Filters;
 using FinSight.Api.Middleware;
 using FinSight.Core.Interfaces;
 using FinSight.Core.Services;
 using FinSight.Core.Validators;
 using FinSight.Data.Context;
 using FinSight.Data.Repositories;
+using FinSight.Data.Seed;
 using FinSight.Data.Services;
+using FinSight.Data.UnitOfWork;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.OpenApi.Models;
-using FinSight.Api.Filters;
-using FinSight.Data.Seed;
-using FinSight.Data.UnitOfWork;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// CORS
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? new[] { "http://localhost:5173" };
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("ReactClient", policy =>
     {
         policy
-            .WithOrigins("http://localhost:5173")
+            .WithOrigins(allowedOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -36,18 +41,24 @@ builder.Services.AddDbContext<FinSightDbContext>(options =>
 // Dependency Injection
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
+
 builder.Services.AddScoped<IAuditService, AuditService>();
+
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IAccountService, AccountService>();
+
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+
 builder.Services.AddScoped<IDepositService, DepositService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<IWithdrawalService, WithdrawalService>();
 builder.Services.AddScoped<ITransferService, TransferService>();
+
 builder.Services.AddScoped<ILoanApplicationRepository, LoanApplicationRepository>();
 builder.Services.AddScoped<ILoanApplicationService, LoanApplicationService>();
 
@@ -61,14 +72,21 @@ builder.Services.AddControllers(options =>
     options.JsonSerializerOptions.Converters.Add(
         new System.Text.Json.Serialization.JsonStringEnumConverter());
 });
+
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateCustomerRequestValidator>();
 
-
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]!);
+var jwtKey = jwtSettings["Key"];
+
+if (string.IsNullOrWhiteSpace(jwtKey))
+{
+    throw new InvalidOperationException("JWT key is missing. Configure Jwt:Key.");
+}
+
+var key = Encoding.UTF8.GetBytes(jwtKey);
 
 builder.Services.AddAuthentication(options =>
 {
@@ -91,6 +109,7 @@ builder.Services.AddAuthentication(options =>
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(options =>
 {
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -128,21 +147,36 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
 app.UseHttpsRedirection();
-//auth CORS for React client to talk to endpoints
+
 app.UseCors("ReactClient");
 
-// Wraps auth/authorization so 401 and 403 responses can be audited
 app.UseMiddleware<SecurityAuditMiddleware>();
 
 app.UseAuthentication();
+
 app.UseAuthorization();
 
 app.MapControllers();
 
-using (var scope = app.Services.CreateScope())
+app.MapGet("/health", () =>
 {
+    return Results.Ok(new
+    {
+        status = "Healthy",
+        application = "FinSight.Api",
+        timestampUtc = DateTime.UtcNow
+    });
+});
+
+var seedDemoData = builder.Configuration.GetValue<bool>("SeedDemoData");
+
+if (seedDemoData)
+{
+    using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<FinSightDbContext>();
     await DemoDataSeeder.SeedAsync(context);
 }
+
 app.Run();
