@@ -241,3 +241,80 @@ button:disabled {
         border-color: #38bdf8;
         color: #38bdf8;
     }
+
+.nav {
+    align-items: center;
+}
+
+.nav-brand {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #38bdf8;
+    margin-right: 1rem;
+}
+
+.nav-links {
+    display: flex;
+    gap: 1rem;
+    flex: 1;
+    align-items: center;
+}
+
+.nav-link {
+    color: #e5e7eb;
+    font-weight: 700;
+    padding: 0.35rem 0;
+    border-bottom: 2px solid transparent;
+}
+
+    .nav-link:hover {
+        color: #38bdf8;
+    }
+
+.active-nav-link {
+    color: #38bdf8;
+    border-bottom-color: #38bdf8;
+}
+
+.page {
+    min-height: calc(100vh - 70px);
+}
+
+.page-header p {
+    max-width: 900px;
+    line-height: 1.6;
+}
+
+.card {
+    transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+    .card:hover {
+        transform: translateY(-2px);
+        border-color: #38bdf8;
+    }
+
+button {
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+input,
+select {
+    background: #1e293b;
+    color: #e5e7eb;
+}
+
+    input:focus,
+    select:focus {
+        outline: none;
+        border-color: #38bdf8;
+        box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+    }
+
+.table-card {
+    margin-top: 1rem;
+}
+
+.data-table tbody tr:hover {
+    background: rgba(56, 189, 248, 0.06);
+}
