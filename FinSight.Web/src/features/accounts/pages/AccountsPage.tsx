@@ -81,7 +81,7 @@ export function AccountsPage() {
                                     <td>{account.accountNumber ?? "-"}</td>
                                     <td>{account.customerName ?? account.customerId ?? "-"}</td>
                                     <td>{account.accountType ?? "-"}</td>
-                                    <td>{formatCurrency(account.balance)}</td>
+                                    <td>{formatCurrency(account.availableBalance ?? account.balance)}</td>
                                     <td>{account.status ?? "-"}</td>
                                 </tr>
                             ))}
