@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../features/auth/authContext/AuthContext";
 
 export function Navbar() {
@@ -10,20 +10,45 @@ export function Navbar() {
         navigate("/login");
     }
 
+    function getNavClass({ isActive }: { isActive: boolean }) {
+        return isActive ? "nav-link active-nav-link" : "nav-link";
+    }
+
     return (
         <nav className="nav">
-            {isAuthenticated && <Link to="/">Dashboard</Link>}
+            <div className="nav-brand">FinSight</div>
 
-            {isAuthenticated && (
-                <>
-                    <Link to="/customers">Customers</Link>
-                    <Link to="/accounts">Accounts</Link>
-                    <Link to="/transactions">Transactions</Link>
-                    <Link to="/loans">Loans</Link>
-                </>
-            )}
+            <div className="nav-links">
+                {isAuthenticated && (
+                    <>
+                        <NavLink to="/" className={getNavClass} end>
+                            Dashboard
+                        </NavLink>
 
-            {!isAuthenticated && <Link to="/login">Login</Link>}
+                        <NavLink to="/customers" className={getNavClass}>
+                            Customers
+                        </NavLink>
+
+                        <NavLink to="/accounts" className={getNavClass}>
+                            Accounts
+                        </NavLink>
+
+                        <NavLink to="/transactions" className={getNavClass}>
+                            Transactions
+                        </NavLink>
+
+                        <NavLink to="/loans" className={getNavClass}>
+                            Loans
+                        </NavLink>
+                    </>
+                )}
+
+                {!isAuthenticated && (
+                    <NavLink to="/login" className={getNavClass}>
+                        Login
+                    </NavLink>
+                )}
+            </div>
 
             {isAuthenticated && (
                 <button type="button" className="nav-button" onClick={handleLogout}>
