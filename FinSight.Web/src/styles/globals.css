@@ -227,3 +227,17 @@ button:disabled {
     grid-template-columns: 1fr;
     gap: 1rem;
 }
+
+.nav-button {
+    background: transparent;
+    border: 1px solid #334155;
+    color: #e5e7eb;
+    padding: 0.25rem 0.65rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+    .nav-button:hover {
+        border-color: #38bdf8;
+        color: #38bdf8;
+    }
