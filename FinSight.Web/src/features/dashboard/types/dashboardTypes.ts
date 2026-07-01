@@ -7,4 +7,9 @@ export interface DashboardSummary {
     totalLoanApplications: number;
     pendingLoanApplications: number;
     approvedLoanApplications: number;
+
+    customerCount: number;
+    accountCount: number;
+    loanApplicationCount: number;
+    openLoanApplicationCount: number;
 }
