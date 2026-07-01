@@ -58,15 +58,8 @@ async function getAccounts(): Promise<ApiCollection<Account>> {
 }
 
 async function getTransactions(): Promise<ApiCollection<Transaction>> {
-    try {
-        const response = await apiClient.get<ApiCollection<Transaction>>("/api/Transactions");
-        return response.data;
-    } catch {
-        const response = await apiClient.get<ApiCollection<Transaction>>("/api/BankTransactions");
-        return response.data;
-    }
+    return [];
 }
-
 async function getLoanApplications(): Promise<ApiCollection<LoanApplication>> {
     const response = await apiClient.get<ApiCollection<LoanApplication>>("/api/LoanApplications");
     return response.data;
