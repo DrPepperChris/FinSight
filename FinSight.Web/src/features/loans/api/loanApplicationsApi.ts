@@ -33,9 +33,13 @@ export async function createLoanApplication(
 }
 
 export async function approveLoanApplication(id: number): Promise<void> {
-    await apiClient.post(`/api/LoanApplications/${id}/approve`);
+    await apiClient.post(`/api/LoanApplications/${id}/approve`, {
+        decisionReason: "Approved by administrator"
+    });
 }
 
 export async function rejectLoanApplication(id: number): Promise<void> {
-    await apiClient.post(`/api/LoanApplications/${id}/reject`);
+    await apiClient.post(`/api/LoanApplications/${id}/reject`, {
+        decisionReason: "Rejected by administrator"
+    });
 }
