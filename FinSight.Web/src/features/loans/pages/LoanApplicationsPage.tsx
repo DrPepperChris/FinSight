@@ -5,6 +5,7 @@ import {
     rejectLoanApplication
 } from "../api/loanApplicationsApi";
 import type { LoanApplication } from "../types/loanApplicationTypes";
+import { useAuth } from "../../auth/authContext/AuthContext";
 
 export function LoanApplicationsPage() {
     const [loanApplications, setLoanApplications] = React.useState<LoanApplication[]>([]);
@@ -13,6 +14,8 @@ export function LoanApplicationsPage() {
     const [actionLoadingId, setActionLoadingId] = React.useState<number | null>(null);
     const [error, setError] = React.useState("");
     const [message, setMessage] = React.useState("");
+    const { hasRole } = useAuth();
+    const canManageLoans = hasRole(["Admin"]);
 
     React.useEffect(() => {
         loadLoanApplications();
@@ -173,13 +176,13 @@ export function LoanApplicationsPage() {
                                 <th>Actions</th>
                             </tr>
                         </thead>
-
                         <tbody>
                             {loanApplications.map((loanApplication) => {
                                 const status = String(getStatus(loanApplication));
                                 const isFinal =
                                     status.toLowerCase() === "approved" ||
                                     status.toLowerCase() === "rejected";
+
                                 return (
                                     <tr key={loanApplication.id}>
                                         <td>
@@ -192,25 +195,31 @@ export function LoanApplicationsPage() {
                                         <td>{status}</td>
                                         <td>{formatDate(getCreatedDate(loanApplication))}</td>
                                         <td>
-                                            <div className="table-actions">
-                                                <button
-                                                    type="button"
-                                                    className="small-button"
-                                                    disabled={isFinal || actionLoadingId === loanApplication.id}
-                                                    onClick={() => handleApprove(loanApplication.id)}
-                                                >
-                                                    Approve
-                                                </button>
+                                            {canManageLoans && !isFinal ? (
+                                                <div className="table-actions">
+                                                    <button
+                                                        type="button"
+                                                        className="small-button"
+                                                        disabled={actionLoadingId === loanApplication.id}
+                                                        onClick={() => handleApprove(loanApplication.id)}
+                                                    >
+                                                        Approve
+                                                    </button>
 
-                                                <button
-                                                    type="button"
-                                                    className="small-button danger-button"
-                                                    disabled={isFinal || actionLoadingId === loanApplication.id}
-                                                    onClick={() => handleReject(loanApplication.id)}
-                                                >
-                                                    Reject
-                                                </button>
-                                            </div>
+                                                    <button
+                                                        type="button"
+                                                        className="small-button danger-button"
+                                                        disabled={actionLoadingId === loanApplication.id}
+                                                        onClick={() => handleReject(loanApplication.id)}
+                                                    >
+                                                        Reject
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <span className="muted-text">
+                                                    {isFinal ? "Final" : "Read only"}
+                                                </span>
+                                            )}
                                         </td>
                                     </tr>
                                 );
