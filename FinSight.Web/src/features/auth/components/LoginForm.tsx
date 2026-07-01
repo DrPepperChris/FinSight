@@ -22,9 +22,18 @@ export function LoginForm() {
             });
 
             loginUser(result.token);
+
             setMessage(`Login successful. Role: ${result.role ?? "Unknown"}`);
 
-            navigate("/");
+            const role = String(result.role ?? "").toLowerCase();
+
+            if (role === "analyst") {
+                navigate("/accounts");
+            } else {
+                navigate("/");
+            }
+
+
         } catch (error) {
             console.error("Login failed:", error);
             setMessage("Login failed. Check username/email and password.");

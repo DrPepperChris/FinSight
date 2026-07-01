@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../features/auth/authContext/AuthContext";
 
 export function Navbar() {
-    const { isAuthenticated, logoutUser } = useAuth();
+    const { isAuthenticated, role, logoutUser, hasRole } = useAuth();
     const navigate = useNavigate();
 
     function handleLogout() {
@@ -15,32 +15,44 @@ export function Navbar() {
     }
 
     return (
-        <nav className="nav">
-            <div className="nav-brand">FinSight</div>
+        <nav className="navbar">
+            <div className="navbar-brand">FinSight</div>
 
-            <div className="nav-links">
-                {isAuthenticated && (
-                    <>
-                        <NavLink to="/" className={getNavClass} end>
-                            Dashboard
-                        </NavLink>
+            <div className="navbar-links">
+                {isAuthenticated && hasRole(["Admin", "Auditor"]) && (
+                    <NavLink to="/" className={getNavClass}>
+                        Dashboard
+                    </NavLink>
+                )}
 
-                        <NavLink to="/customers" className={getNavClass}>
-                            Customers
-                        </NavLink>
+                {isAuthenticated && hasRole(["Admin", "Auditor"]) && (
+                    <NavLink to="/customers" className={getNavClass}>
+                        Customers
+                    </NavLink>
+                )}
 
-                        <NavLink to="/accounts" className={getNavClass}>
-                            Accounts
-                        </NavLink>
+                {isAuthenticated && hasRole(["Admin", "Auditor", "Analyst"]) && (
+                    <NavLink to="/accounts" className={getNavClass}>
+                        Accounts
+                    </NavLink>
+                )}
 
-                        <NavLink to="/transactions" className={getNavClass}>
-                            Transactions
-                        </NavLink>
+                {isAuthenticated && hasRole(["Admin", "Analyst"]) && (
+                    <NavLink to="/transactions" className={getNavClass}>
+                        Transactions
+                    </NavLink>
+                )}
 
-                        <NavLink to="/loans" className={getNavClass}>
-                            Loans
-                        </NavLink>
-                    </>
+                {isAuthenticated && hasRole(["Admin", "Auditor"]) && (
+                    <NavLink to="/loans" className={getNavClass}>
+                        Loans
+                    </NavLink>
+                )}
+
+                {isAuthenticated && hasRole(["Admin", "Auditor"]) && (
+                    <NavLink to="/audit-logs" className={getNavClass}>
+                        Audit Logs
+                    </NavLink>
                 )}
 
                 {!isAuthenticated && (
@@ -50,11 +62,16 @@ export function Navbar() {
                 )}
             </div>
 
-            {isAuthenticated && (
-                <button type="button" className="nav-button" onClick={handleLogout}>
-                    Logout
-                </button>
-            )}
+            <div className="navbar-actions">
+                {isAuthenticated && (
+                    <>
+                        <span className="role-badge">{role ?? "User"}</span>
+                        <button type="button" className="button secondary-button" onClick={handleLogout}>
+                            Logout
+                        </button>
+                    </>
+                )}
+            </div>
         </nav>
     );
 }
