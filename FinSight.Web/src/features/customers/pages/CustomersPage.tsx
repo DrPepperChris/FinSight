@@ -67,7 +67,7 @@ export function CustomersPage() {
                                 <tr key={customer.id}>
                                     <td>{customer.customerNumber}</td>
                                     <td>
-                                        {customer.firstName} {customer.lastName}
+                                        {customer.fullName ?? (`${customer.firstName ?? ""} ${customer.lastName ?? ""}`.trim() || "-")}
                                     </td>
                                     <td>{customer.email}</td>
                                     <td>{customer.riskRating}</td>
