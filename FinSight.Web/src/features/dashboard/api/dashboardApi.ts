@@ -97,6 +97,11 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
     const transactionItems = getPagedItems(transactions);
     const loanItems = getPagedItems(loans);
 
+    const totalCustomers = getPagedTotal(customers);
+    const totalAccounts = getPagedTotal(accounts);
+    const totalTransactions = getPagedTotal(transactions);
+    const totalLoanApplications = getPagedTotal(loans);
+
     const totalBalance = accountItems.reduce(
         (sum, account) => sum + (account.availableBalance ?? account.balance ?? 0),
         0
@@ -118,13 +123,18 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
     }).length;
 
     return {
-        totalCustomers: getPagedTotal(customers),
-        totalAccounts: getPagedTotal(accounts),
+        totalCustomers,
+        totalAccounts,
         totalBalance,
-        totalTransactions: getPagedTotal(transactions),
+        totalTransactions,
         totalTransactionVolume,
-        totalLoanApplications: getPagedTotal(loans),
+        totalLoanApplications,
         pendingLoanApplications,
-        approvedLoanApplications
+        approvedLoanApplications,
+
+        customerCount: totalCustomers,
+        accountCount: totalAccounts,
+        loanApplicationCount: totalLoanApplications,
+        openLoanApplicationCount: pendingLoanApplications
     };
 }
