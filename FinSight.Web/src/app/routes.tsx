@@ -7,6 +7,8 @@ import { AccountsPage } from "../features/accounts/pages/AccountsPage";
 import { TransactionsPage } from "../features/transactions/pages/TransactionsPage";
 import { LoanApplicationsPage } from "../features/loans/pages/LoanApplicationsPage";
 import { AuditLogsPage } from "../features/audit/pages/AuditLogsPage";
+import { AnalyticsPage } from "../features/analytics/pages/AnalyticsPage";
+
 
 function UnauthorizedPage() {
     return (
@@ -72,6 +74,15 @@ export function AppRoutes() {
                 element={
                     <ProtectedRoute allowedRoles={["Admin", "Auditor"]}>
                         <AuditLogsPage />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/analytics"
+                element={
+                    <ProtectedRoute allowedRoles={["Admin", "Auditor"]}>
+                        <AnalyticsPage />
                     </ProtectedRoute>
                 }
             />
