@@ -1,0 +1,10 @@
+metric_name,metric_value,metric_description
+Total Customers,5,Number of active customers in the analytics sample
+Active Accounts,5,Number of active banking accounts
+Total Portfolio Balance,53175,Combined customer account balance
+Total Transactions,90,Total processed transaction records
+High Value Transactions,8,Transactions over the configured high-value threshold
+Flagged Transactions,4,Transactions requiring additional review
+Pending Loans,5,Loan applications awaiting decision
+Approved Loans,2,Loan applications approved in the sample
+Rejected Loans,1,Loan applications rejected in the sample

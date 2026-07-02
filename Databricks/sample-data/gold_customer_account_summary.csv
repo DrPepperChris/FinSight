@@ -1,0 +1,6 @@
+customer_id,customer_number,full_name,risk_rating,total_accounts,total_balance,total_deposits,total_withdrawals,total_transaction_count,latest_transaction_timestamp
+1,CUST-5001,Ethan Sullivan,Low,1,4310,5200,890,18,2026-06-25T15:42:00Z
+2,CUST-5002,Mia Thompson,Low,1,9725,11200,1475,17,2026-06-25T16:10:00Z
+3,CUST-5003,Noah Carter,Medium,1,18450,21000,2550,19,2026-06-25T17:35:00Z
+4,CUST-5004,Sophia Bennett,High,1,6110,8400,2290,16,2026-06-25T18:05:00Z
+5,CUST-5005,Lucas Brooks,Medium,1,14580,17750,3170,20,2026-06-25T18:45:00Z

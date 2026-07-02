@@ -1,0 +1,6 @@
+customer_id,customer_number,full_name,email,risk_rating
+1,CUST-5001,Ethan Sullivan,ethan.sullivan@demo.com,Low
+2,CUST-5002,Mia Thompson,mia.thompson@demo.com,Low
+3,CUST-5003,Noah Carter,noah.carter@demo.com,Medium
+4,CUST-5004,Sophia Bennett,sophia.bennett@demo.com,High
+5,CUST-5005,Lucas Brooks,lucas.brooks@demo.com,Medium
