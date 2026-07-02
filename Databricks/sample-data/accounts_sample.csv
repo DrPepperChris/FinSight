@@ -1,0 +1,6 @@
+account_id,customer_id,account_number,account_type,current_balance,status
+1,1,CHK-10001,Checking,2500,Active
+2,2,SAV-10002,Savings,8500,Active
+3,3,MM-10003,MoneyMarket,15000,Active
+4,4,CHK-10004,Checking,4200,Active
+5,5,SAV-10005,Savings,12000,Active

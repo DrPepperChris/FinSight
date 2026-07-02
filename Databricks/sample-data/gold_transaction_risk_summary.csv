@@ -1,0 +1,6 @@
+customer_id,customer_number,full_name,risk_rating,total_transaction_count,high_value_transaction_count,flagged_transaction_count,total_transaction_volume,risk_signal
+1,CUST-5001,Ethan Sullivan,Low,18,0,0,6090,Normal
+2,CUST-5002,Mia Thompson,Low,17,1,0,12675,Review
+3,CUST-5003,Noah Carter,Medium,19,2,1,23550,Elevated
+4,CUST-5004,Sophia Bennett,High,16,2,2,10690,High
+5,CUST-5005,Lucas Brooks,Medium,20,3,1,20920,Elevated

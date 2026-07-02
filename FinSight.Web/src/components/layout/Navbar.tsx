@@ -55,6 +55,12 @@ export function Navbar() {
                     </NavLink>
                 )}
 
+                {isAuthenticated && hasRole(["Admin", "Auditor"]) && (
+                    <NavLink to="/analytics" className={getNavClass}>
+                        Analytics
+                    </NavLink>
+                )}
+
                 {!isAuthenticated && (
                     <NavLink to="/login" className={getNavClass}>
                         Login
