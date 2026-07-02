@@ -2,6 +2,8 @@
 
 FinSight is a full-stack banking and financial analytics demo application built with ASP.NET Core, SQL Server, React, TypeScript, JWT authentication, Azure hosting, and a Databricks-style Bronze/Silver/Gold analytics pipeline.
 
+![FinSight Databricks Integration Architecture](docs/FinSightImg.png)
+
 The project demonstrates enterprise software engineering, API development, secure frontend integration, database-backed financial workflows, cloud deployment, and data engineering architecture.
 
 ---
@@ -94,14 +96,27 @@ FinSightDb
 - Protected frontend routes
 - Logout functionality
 - Navbar updates based on authentication state
-- Demo admin user support
+- Demo users accounts (Admin,Analyst,Auditor)
 
-Demo login:
+## Demo Users
+
+The deployed demo includes three seeded application users. Each role has different access inside the FinSight web app.
 
 ```text
+Admin
 Username: admin
 Password: Password123!
-```
+Access: Full access to Dashboard, Customers, Accounts, Transactions, Loans, Audit Logs, and loan approve/reject actions.
+
+Auditor
+Username: auditor
+Password: Password123!
+Access: Dashboard, Customers, Accounts, Loans in read-only mode, and Audit Logs. No Transactions tab and no approve/reject actions.
+
+Analyst
+Username: analyst
+Password: Password123!
+Access: Accounts and Transactions only. No Dashboard, Customers, Loans, or Audit Logs.
 
 ### Customers
 
