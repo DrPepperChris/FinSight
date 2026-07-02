@@ -6,6 +6,80 @@ FinSight is a full-stack banking and financial analytics demo application built 
 
 The project demonstrates enterprise software engineering, API development, secure frontend integration, database-backed financial workflows, cloud deployment, and data engineering architecture.
 
+## Databricks ETL Showcase
+
+FinSight includes a Databricks-style ETL and analytics showcase that demonstrates how operational banking data can be transformed into reporting-ready datasets.
+
+The live FinSight application stores operational data such as customers, accounts, transactions, loan applications, and audit logs. The Databricks folder shows how that same data can move through a medallion architecture for analytics, reporting, audit review, and future fraud/risk analysis.
+
+### Medallion Architecture
+
+```text
+Operational Data
+      ↓
+Bronze Layer
+      ↓
+Silver Layer
+      ↓
+Gold Layer
+      ↓
+Reporting Layer
+```
+
+### Pipeline Overview
+
+| Layer | Purpose | Example Outputs |
+|---|---|---|
+| Bronze | Raw operational extracts with minimal transformation | Raw customers, accounts, transactions, loan applications |
+| Silver | Cleaned, typed, standardized, and deduplicated data | Clean customer, account, transaction, and loan records |
+| Gold | Business-ready aggregates and analytics tables | Customer account summary, transaction risk summary, portfolio summary |
+| Reporting | SQL views and dashboard-ready outputs | Customer summaries, transaction risk views, high-value transaction review |
+
+### Databricks Assets
+
+```text
+Databricks/
+  notebooks/
+    01_bronze_ingest_operational_data.py
+    02_silver_clean_and_standardize.py
+    03_gold_customer_account_analytics.py
+    04_reporting_views_and_exports.py
+
+  sample-data/
+    customers_sample.csv
+    accounts_sample.csv
+    transactions_sample.csv
+    loan_applications_sample.csv
+
+  sample-output/
+    gold_customer_account_summary.csv
+    gold_transaction_risk_summary.csv
+    reporting_portfolio_summary.csv
+
+  sql/
+    create_reporting_views.sql
+
+  docs/
+    data-flow.md
+    data-dictionary.md
+```
+
+### What This Demonstrates
+
+This portion of the project demonstrates:
+
+```text
+PySpark notebook development
+Delta Lake table modeling
+Bronze/Silver/Gold medallion architecture
+ETL/ELT workflow design
+Banking analytics use cases
+Risk and audit reporting concepts
+SQL reporting views for BI/dashboard consumption
+```
+
+The web application demonstrates operational software engineering. The Databricks showcase demonstrates how that operational data can be prepared for analytics and reporting.
+
 ---
 
 ## Live Azure Deployment
