@@ -66,6 +66,12 @@ export function Navbar() {
                         Login
                     </NavLink>
                 )}
+
+                {isAuthenticated && hasRole(["Admin", "Auditor"]) && (
+                    <NavLink to="/ingestion-engine" className={getNavClass}>
+                        Ingestion Engine
+                    </NavLink>
+                )}
             </div>
 
             <div className="navbar-actions">
