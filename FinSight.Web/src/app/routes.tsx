@@ -8,7 +8,7 @@ import { TransactionsPage } from "../features/transactions/pages/TransactionsPag
 import { LoanApplicationsPage } from "../features/loans/pages/LoanApplicationsPage";
 import { AuditLogsPage } from "../features/audit/pages/AuditLogsPage";
 import { AnalyticsPage } from "../features/analytics/pages/AnalyticsPage";
-
+import { IngestionEnginePage } from "../features/ingestion/pages/IngestionEnginePage";
 
 function UnauthorizedPage() {
     return (
@@ -83,6 +83,15 @@ export function AppRoutes() {
                 element={
                     <ProtectedRoute allowedRoles={["Admin", "Auditor"]}>
                         <AnalyticsPage />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/ingestion-engine"
+                element={
+                    <ProtectedRoute allowedRoles={["Admin", "Auditor"]}>
+                        <IngestionEnginePage />
                     </ProtectedRoute>
                 }
             />
