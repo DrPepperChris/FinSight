@@ -3,7 +3,7 @@ transaction_id,account_id,customer_id,account_number,customer_name,transaction_t
 2,1,1,CHK-100001,Ethan Sullivan,Withdrawal,900.45,2026-06-26,WD TEST
 3,1,1,CHK-100001,Ethan Sullivan,TransferOut,984.32,2026-06-26,xfer test
 4,2,1,SAV-100001,Ethan Sullivan,Deposit,125.22,2026-06-27,initial savings deposit
-5,3,2,CRD-100001,Sophia Bennett,Withdrawal,250.00,2026-06-27,card payment
-6,4,3,MMA-100001,Mia Thompson,Deposit,5000.00,2026-06-28,money market funding
-7,4,3,MMA-100001,Mia Thompson,Withdrawal,1200.00,2026-06-29,large withdrawal
+5,3,2,CRD-100001,Sophia Bennett,Withdrawal,250,2026-06-27,card payment
+6,4,3,MMA-100001,Mia Thompson,Deposit,5000,2026-06-28,money market funding
+7,4,3,MMA-100001,Mia Thompson,Withdrawal,1200,2026-06-29,large withdrawal
 8,3,2,CRD-100001,Sophia Bennett,TransferIn,1098.32,2026-06-29,transfer received

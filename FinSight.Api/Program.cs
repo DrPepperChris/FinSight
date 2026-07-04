@@ -76,7 +76,7 @@ builder.Services.AddScoped<ITransferService, TransferService>();
 
 builder.Services.AddScoped<ILoanApplicationRepository, LoanApplicationRepository>();
 builder.Services.AddScoped<ILoanApplicationService, LoanApplicationService>();
-
+builder.Services.AddScoped<IDataIngestionService, DataIngestionService>();
 // Validation
 builder.Services.AddControllers(options =>
 {
