@@ -1,4 +1,6 @@
 ﻿import React from "react";
+import { apiClient } from "../../../lib/apiClient";
+
 import type {
     GoldOutputDefinition,
     GoldOutputType,
@@ -106,6 +108,30 @@ interface IngestionPipelineResult {
     rejectedRows: RejectedTransactionRow[];
     goldRows: GoldCustomerAccountSummary[];
     reporting: ReportingSummary;
+}
+
+interface DatabricksJobValidationResult {
+    isValid: boolean;
+    status: string;
+    messages: string[];
+    warnings: string[];
+}
+
+interface DatabricksJobRunResult {
+    runId: string;
+    status: string;
+    submittedAtUtc: string;
+    message: string;
+    plannedSteps: string[];
+}
+
+interface DatabricksJobStatusResult {
+    runId: string;
+    status: string;
+    percentComplete: number;
+    lastUpdatedUtc: string;
+    completedSteps: string[];
+    message: string;
 }
 
 const transformationOptions: TransformationOption[] = [
@@ -236,89 +262,8 @@ function getGoldOutputDefinition(id: GoldOutputType) {
     );
 }
 
-function getApiBaseUrl() {
-    const configuredUrl = import.meta.env.VITE_API_BASE_URL;
 
-    if (configuredUrl && configuredUrl.trim().length > 0) {
-        return configuredUrl.trim().replace(/\/$/, "");
-    }
 
-    const isLocalhost =
-        window.location.hostname === "localhost" ||
-        window.location.hostname === "127.0.0.1";
-
-    if (isLocalhost) {
-        return "https://localhost:7029";
-    }
-
-    return "";
-}
-
-function getAuthHeaders(): Record<string, string> {
-    const possibleStorageKeys = [
-        "token",
-        "accessToken",
-        "jwtToken",
-        "authToken",
-        "finsightToken",
-        "finsight.token",
-        "user",
-        "auth",
-        "authUser"
-    ];
-
-    let token: string | null = null;
-
-    for (const key of possibleStorageKeys) {
-        const rawValue =
-            localStorage.getItem(key) ??
-            sessionStorage.getItem(key);
-
-        if (!rawValue) {
-            continue;
-        }
-
-        if (rawValue.startsWith("eyJ")) {
-            token = rawValue;
-            break;
-        }
-
-        if (rawValue.startsWith("\"eyJ")) {
-            token = rawValue.split("\"").join("");
-            break;
-        }
-
-        try {
-            const parsed = JSON.parse(rawValue);
-
-            const parsedToken =
-                parsed?.token ??
-                parsed?.accessToken ??
-                parsed?.jwtToken ??
-                parsed?.authToken ??
-                parsed?.data?.token ??
-                parsed?.data?.accessToken;
-
-            if (typeof parsedToken === "string" && parsedToken.length > 0) {
-                token = parsedToken;
-                break;
-            }
-        } catch {
-            // Value was not JSON. Continue checking other keys.
-        }
-    }
-
-    if (!token) {
-        console.warn("No JWT token found in localStorage or sessionStorage.");
-        return {};
-    }
-
-    console.log("JWT token found for ingestion request.");
-
-    return {
-        Authorization: `Bearer ${token}`
-    };
-}
 
 export function IngestionEnginePage() {
     const [viewMode, setViewMode] = React.useState<ViewMode>("walkthrough");
@@ -368,6 +313,21 @@ export function IngestionEnginePage() {
     const [isRunningPipeline, setIsRunningPipeline] = React.useState(false);
     const [pipelineError, setPipelineError] = React.useState<string | null>(null);
 
+    const [databricksValidation, setDatabricksValidation] =
+        React.useState<DatabricksJobValidationResult | null>(null);
+
+    const [databricksRun, setDatabricksRun] =
+        React.useState<DatabricksJobRunResult | null>(null);
+
+    const [databricksStatus, setDatabricksStatus] =
+        React.useState<DatabricksJobStatusResult | null>(null);
+
+    const [isDatabricksActionRunning, setIsDatabricksActionRunning] =
+        React.useState(false);
+
+    const [databricksError, setDatabricksError] =
+        React.useState<string | null>(null);
+
     const goldDefinition = getGoldOutputDefinition(goldOutputType);
 
     function toggleTransformation(id: string) {
@@ -393,14 +353,14 @@ export function IngestionEnginePage() {
             transformations: selectedTransformations,
             goldStandard: goldDefinition,
             pipelineSteps: [
-                "Validate ingestion configuration without storing secrets in the browser.",
+                "Define the source system and landing-zone pattern for the ingestion workflow.",
                 sourceType === "CloudStorage"
-                    ? "Ingest new files from the cloud storage landing zone using Databricks Auto Loader."
-                    : "Read operational data from the configured database connector or Lakeflow-style pipeline.",
-                "Write raw records into the Bronze Delta table.",
-                "Apply selected Silver transformations and quality rules.",
-                "Build the selected Gold output table.",
-                "Create or refresh reporting views for dashboard and BI consumption."
+                    ? "Map uploaded or landed files to a Databricks Auto Loader pattern for Bronze ingestion."
+                    : "Map operational database data to a secure Databricks connector or Lakeflow-style ingestion pattern.",
+                "Preserve raw records in a Bronze Delta table with batch, file, and ingestion metadata.",
+                "Apply Silver validation, type casting, timestamp parsing, deduplication, and standardization rules.",
+                "Aggregate clean Silver records into the selected Gold business output.",
+                "Expose reporting-ready views for dashboards, audit review, and analytics."
             ]
         };
     }
@@ -410,102 +370,227 @@ export function IngestionEnginePage() {
     const generatedConfig =
         sourceType === "CloudStorage"
             ? {
-                sourceType,
-                storageAccount: cloudStorageConfig.storageAccount,
-                container: cloudStorageConfig.container,
-                landingPath: cloudStorageConfig.landingPath,
-                fileFormat: cloudStorageConfig.fileFormat,
-                schemaMode: cloudStorageConfig.schemaMode,
-                bronzeTable: cloudStorageConfig.targetBronzeTable,
-                checkpointPath: cloudStorageConfig.checkpointPath,
-                silverTable: pipelinePlan.silverTable,
-                goldTable: pipelinePlan.goldTable,
-                transformations: selectedTransformations,
-                goldStandard: {
+                designPurpose: "Azure Databricks medallion architecture mapping",
+                executionMode: "Design preview only",
+                liveDemoExecution: "FinSight ASP.NET Core API",
+                targetPlatform: "Azure Databricks",
+                targetArchitecture: "Bronze / Silver / Gold / Reporting",
+                source: {
+                    sourceType,
+                    storageAccount: cloudStorageConfig.storageAccount,
+                    container: cloudStorageConfig.container,
+                    landingPath: cloudStorageConfig.landingPath,
+                    fileFormat: cloudStorageConfig.fileFormat,
+                    schemaMode: cloudStorageConfig.schemaMode
+                },
+                bronze: {
+                    table: cloudStorageConfig.targetBronzeTable,
+                    ingestionPattern: "Databricks Auto Loader",
+                    checkpointPath: cloudStorageConfig.checkpointPath,
+                    purpose: "Preserve raw source records with ingestion metadata"
+                },
+                silver: {
+                    table: pipelinePlan.silverTable,
+                    transformations: selectedTransformations,
+                    purpose: "Validate, type, normalize, deduplicate, and classify records"
+                },
+                gold: {
+                    table: pipelinePlan.goldTable,
                     name: goldDefinition.name,
-                    targetTable: goldDefinition.targetTable,
-                    businessPurpose: goldDefinition.businessPurpose
+                    businessPurpose: goldDefinition.businessPurpose,
+                    columns: goldDefinition.columns
+                },
+                reporting: {
+                    outputs: [
+                        "High-value transaction review",
+                        "Transaction volume by type",
+                        "Daily cash-flow trend",
+                        "Customer/account summary"
+                    ]
+                },
+                security: {
+                    browserStoresSecrets: false,
+                    secretHandling: "Backend-managed Databricks secret scope",
+                    note: "This UI does not collect or persist cloud credentials."
                 }
             }
             : {
-                sourceType,
-                databaseType: databaseConfig.databaseType,
-                serverName: databaseConfig.serverName,
-                databaseName: databaseConfig.databaseName,
-                sourceTable: databaseConfig.sourceTable,
-                ingestionMode: databaseConfig.ingestionMode,
-                incrementalColumn: databaseConfig.incrementalColumn,
-                bronzeTable: databaseConfig.targetBronzeTable,
-                silverTable: pipelinePlan.silverTable,
-                goldTable: pipelinePlan.goldTable,
-                transformations: selectedTransformations,
-                goldStandard: {
-                    name: goldDefinition.name,
-                    targetTable: goldDefinition.targetTable,
-                    businessPurpose: goldDefinition.businessPurpose
+                designPurpose: "Azure Databricks medallion architecture mapping",
+                executionMode: "Design preview only",
+                liveDemoExecution: "FinSight ASP.NET Core API",
+                targetPlatform: "Azure Databricks",
+                targetArchitecture: "Bronze / Silver / Gold / Reporting",
+                source: {
+                    sourceType,
+                    databaseType: databaseConfig.databaseType,
+                    serverName: databaseConfig.serverName,
+                    databaseName: databaseConfig.databaseName,
+                    sourceTable: databaseConfig.sourceTable,
+                    ingestionMode: databaseConfig.ingestionMode,
+                    incrementalColumn: databaseConfig.incrementalColumn
                 },
-                secretReference: "{{DATABRICKS_SECRET_SCOPE}}/{{AZURE_SQL_CONNECTION_KEY}}"
+                bronze: {
+                    table: databaseConfig.targetBronzeTable,
+                    ingestionPattern: "Secure database connector or Lakeflow-style ingestion",
+                    purpose: "Preserve raw operational records with ingestion metadata"
+                },
+                silver: {
+                    table: pipelinePlan.silverTable,
+                    transformations: selectedTransformations,
+                    purpose: "Validate, type, normalize, deduplicate, and classify records"
+                },
+                gold: {
+                    table: pipelinePlan.goldTable,
+                    name: goldDefinition.name,
+                    businessPurpose: goldDefinition.businessPurpose,
+                    columns: goldDefinition.columns
+                },
+                reporting: {
+                    outputs: [
+                        "High-value transaction review",
+                        "Transaction volume by type",
+                        "Daily cash-flow trend",
+                        "Customer/account summary"
+                    ]
+                },
+                security: {
+                    browserStoresSecrets: false,
+                    secretReference: "{{DATABRICKS_SECRET_SCOPE}}/{{AZURE_SQL_CONNECTION_KEY}}",
+                    note: "Credentials would be resolved by the backend, not entered in the browser."
+                }
             };
 
-    async function runSamplePipeline() {
-        console.log("Run Sample Pipeline button clicked");
 
+    function buildDatabricksJobRequest() {
+        return {
+            sourceType,
+            bronzeTable: pipelinePlan.bronzeTable,
+            silverTable: pipelinePlan.silverTable,
+            goldTable: pipelinePlan.goldTable,
+            transformations: selectedTransformations,
+            goldOutputName: goldDefinition.name
+        };
+    }
+
+    async function validateDatabricksDesign() {
+        setIsDatabricksActionRunning(true);
+        setDatabricksError(null);
+
+        try {
+            const response = await apiClient.post<DatabricksJobValidationResult>(
+                "/api/Databricks/jobs/validate",
+                buildDatabricksJobRequest()
+            );
+
+            setDatabricksValidation(response.data);
+        } catch (error: any) {
+            console.error("Databricks validation error:", error);
+
+            const status = error?.response?.status;
+
+            if (status === 401) {
+                setDatabricksError("Databricks validation failed with 401 Unauthorized. Log out and log back in.");
+            } else if (status === 403) {
+                setDatabricksError("Databricks validation failed with 403 Forbidden. Admin or Analyst role is required.");
+            } else {
+                setDatabricksError("Unable to validate Databricks design.");
+            }
+        } finally {
+            setIsDatabricksActionRunning(false);
+        }
+    }
+
+    async function simulateDatabricksJob() {
+        setIsDatabricksActionRunning(true);
+        setDatabricksError(null);
+        setDatabricksStatus(null);
+
+        try {
+            const response = await apiClient.post<DatabricksJobRunResult>(
+                "/api/Databricks/jobs/run",
+                buildDatabricksJobRequest()
+            );
+
+            setDatabricksRun(response.data);
+        } catch (error: any) {
+            console.error("Databricks run error:", error);
+
+            const status = error?.response?.status;
+
+            if (status === 401) {
+                setDatabricksError("Databricks simulation failed with 401 Unauthorized. Log out and log back in.");
+            } else if (status === 403) {
+                setDatabricksError("Databricks simulation failed with 403 Forbidden. Admin or Analyst role is required.");
+            } else {
+                setDatabricksError("Unable to simulate Databricks job.");
+            }
+        } finally {
+            setIsDatabricksActionRunning(false);
+        }
+    }
+
+    async function checkDatabricksJobStatus() {
+        if (!databricksRun?.runId) {
+            setDatabricksError("Run a simulated Databricks job before checking status.");
+            return;
+        }
+
+        setIsDatabricksActionRunning(true);
+        setDatabricksError(null);
+
+        try {
+            const response = await apiClient.get<DatabricksJobStatusResult>(
+                `/api/Databricks/jobs/status/${databricksRun.runId}`
+            );
+
+            setDatabricksStatus(response.data);
+        } catch (error: any) {
+            console.error("Databricks status error:", error);
+
+            const status = error?.response?.status;
+
+            if (status === 401) {
+                setDatabricksError("Databricks status check failed with 401 Unauthorized. Log out and log back in.");
+            } else if (status === 403) {
+                setDatabricksError("Databricks status check failed with 403 Forbidden. Admin or Analyst role is required.");
+            } else {
+                setDatabricksError("Unable to check Databricks job status.");
+            }
+        } finally {
+            setIsDatabricksActionRunning(false);
+        }
+    }
+
+    async function runSamplePipeline() {
         setIsRunningPipeline(true);
         setPipelineError(null);
 
         try {
-            const apiUrl = `${getApiBaseUrl()}/api/DataIngestion/sample`;
-            console.log("Calling sample pipeline API:", apiUrl);
+            const response = await apiClient.post<IngestionPipelineResult>(
+                "/api/DataIngestion/sample"
+            );
 
-            const response = await fetch(apiUrl, {
-                method: "POST",
-                headers: getAuthHeaders()
-            });
-
-            console.log("Sample pipeline response status:", response.status);
-
-            if (!response.ok) {
-                const responseText = await response.text().catch(() => "");
-
-                if (response.status === 401) {
-                    throw new Error(
-                        "Sample pipeline failed with 401 Unauthorized. Log out, log back in, and try again. The request did not include a valid JWT token."
-                    );
-                }
-
-                if (response.status === 403) {
-                    throw new Error(
-                        "Sample pipeline failed with 403 Forbidden. Your user is authenticated but does not have the required role."
-                    );
-                }
-
-                throw new Error(
-                    `Sample pipeline failed. Status: ${response.status}. ${responseText}`
-                );
-            }
-
-            const data = (await response.json()) as IngestionPipelineResult;
-            console.log("Sample pipeline result:", data);
-
-            setWalkthroughResult(data);
+            setWalkthroughResult(response.data);
             setWalkthroughTab("overview");
-        } catch (error) {
+        } catch (error: any) {
             console.error("Sample pipeline error:", error);
 
-            const message =
-                error instanceof Error
-                    ? error.message
-                    : "Unable to run sample ingestion pipeline.";
+            const status = error?.response?.status;
+            const apiMessage = error?.response?.data?.message;
 
-            setPipelineError(message);
+            if (status === 401) {
+                setPipelineError("Sample pipeline failed with 401 Unauthorized. Log out and log back in.");
+            } else if (status === 403) {
+                setPipelineError("Sample pipeline failed with 403 Forbidden. Your role cannot run this.");
+            } else {
+                setPipelineError(apiMessage ?? "Unable to run sample ingestion pipeline.");
+            }
         } finally {
             setIsRunningPipeline(false);
         }
     }
 
     async function uploadCsvPipeline() {
-        console.log("Process Uploaded CSV button clicked");
-
         if (!selectedFile) {
             setPipelineError("Choose a CSV file before processing.");
             return;
@@ -513,56 +598,52 @@ export function IngestionEnginePage() {
 
         setIsRunningPipeline(true);
         setPipelineError(null);
+        setWalkthroughResult(null);
+        setWalkthroughTab("overview");
 
         try {
             const formData = new FormData();
-            formData.append("file", selectedFile);
+            formData.append("file", selectedFile, selectedFile.name);
 
-            const apiUrl = `${getApiBaseUrl()}/api/DataIngestion/upload`;
-            console.log("Calling upload pipeline API:", apiUrl);
-
-            const response = await fetch(apiUrl, {
-                method: "POST",
-                headers: getAuthHeaders(),
-                body: formData
-            });
-
-            console.log("Upload pipeline response status:", response.status);
-
-            if (!response.ok) {
-                const responseText = await response.text().catch(() => "");
-
-                if (response.status === 401) {
-                    throw new Error(
-                        "CSV pipeline failed with 401 Unauthorized. Log out, log back in as Admin or Analyst, and try again. The upload request did not include a valid JWT token."
-                    );
+            const response = await apiClient.post<IngestionPipelineResult>(
+                "/api/DataIngestion/upload",
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data"
+                    }
                 }
+            );
 
-                if (response.status === 403) {
-                    throw new Error(
-                        "CSV pipeline failed with 403 Forbidden. Your user is authenticated but does not have the required Admin or Analyst role."
-                    );
-                }
-
-                throw new Error(
-                    `CSV pipeline failed. Status: ${response.status}. ${responseText}`
-                );
-            }
-
-            const data = (await response.json()) as IngestionPipelineResult;
-            console.log("Upload pipeline result:", data);
-
-            setWalkthroughResult(data);
+            setWalkthroughResult(response.data);
             setWalkthroughTab("overview");
-        } catch (error) {
+        } catch (error: any) {
             console.error("Upload pipeline error:", error);
 
-            const message =
-                error instanceof Error
-                    ? error.message
-                    : "Unable to process uploaded CSV.";
+            const status = error?.response?.status;
+            const responseData = error?.response?.data;
 
-            setPipelineError(message);
+            let apiMessage = "Unable to process uploaded CSV.";
+
+            if (typeof responseData === "string") {
+                apiMessage = responseData;
+            } else if (responseData?.message) {
+                apiMessage = responseData.message;
+            } else if (responseData?.title) {
+                apiMessage = responseData.title;
+            }
+
+            if (status === 400) {
+                setPipelineError(`CSV upload failed with 400 Bad Request. ${apiMessage}`);
+            } else if (status === 401) {
+                setPipelineError("CSV upload failed with 401 Unauthorized. Log out and log back in.");
+            } else if (status === 403) {
+                setPipelineError("CSV upload failed with 403 Forbidden. Upload requires Admin or Analyst.");
+            } else if (status) {
+                setPipelineError(`CSV upload failed with status ${status}. ${apiMessage}`);
+            } else {
+                setPipelineError(apiMessage);
+            }
         } finally {
             setIsRunningPipeline(false);
         }
@@ -599,7 +680,7 @@ export function IngestionEnginePage() {
                     className={viewMode === "planner" ? "active" : ""}
                     onClick={() => setViewMode("planner")}
                 >
-                    Configure Databricks Pipeline
+                    View Databricks Design
                 </button>
             </div>
 
@@ -609,8 +690,9 @@ export function IngestionEnginePage() {
                         <h2>Interactive demo mode</h2>
                         <p>
                             This walkthrough calls the FinSight API and runs a sample or uploaded CSV
-                            through a medallion-style ETL flow. The Databricks planner is still
-                            available under Configure Databricks Pipeline.
+                            through a medallion-style ETL flow. The Databricks design view shows how
+                            the same workflow maps to Azure Databricks, Delta tables, and lakehouse
+                            reporting patterns.
                         </p>
                     </section>
 
@@ -623,7 +705,7 @@ export function IngestionEnginePage() {
                                 onClick={runSamplePipeline}
                                 disabled={isRunningPipeline}
                             >
-                                {isRunningPipeline ? "Running..." : "Run Sample Pipeline"}
+                                {isRunningPipeline ? "Running..." : "Run Built-In Sample"}
                             </button>
 
                             <label className="file-upload-button">
@@ -631,9 +713,12 @@ export function IngestionEnginePage() {
                                 <input
                                     type="file"
                                     accept=".csv"
-                                    onChange={(event) =>
-                                        setSelectedFile(event.target.files?.[0] ?? null)
-                                    }
+                                    onChange={(event) => {
+                                        setSelectedFile(event.target.files?.[0] ?? null);
+                                        setWalkthroughResult(null);
+                                        setWalkthroughTab("overview");
+                                        setPipelineError(null);
+                                    }}
                                 />
                             </label>
 
@@ -656,7 +741,9 @@ export function IngestionEnginePage() {
 
                         {selectedFile && (
                             <p className="selected-file">
-                                Selected file: <strong>{selectedFile.name}</strong>
+                                Selected upload file: <strong>{selectedFile.name}</strong>
+                                <br />
+                                <small>Use Process Uploaded CSV to run this file. Run Built-In Sample ignores selected files.</small>
                             </p>
                         )}
 
@@ -908,7 +995,7 @@ export function IngestionEnginePage() {
                                         {walkthroughResult.reporting.transactionVolumeByType.map((item) => (
                                             <MetricCard
                                                 key={`${item.transactionType}-${item.cashFlowDirection}`}
-                                                label={`${item.transactionType} · ${item.cashFlowDirection}`}
+                                                label={`${item.transactionType} Â· ${item.cashFlowDirection}`}
                                                 value={`${item.transactionCount} / ${formatCurrency(item.totalAmount)}`}
                                             />
                                         ))}
@@ -948,20 +1035,20 @@ export function IngestionEnginePage() {
                                     <h2>Architecture</h2>
                                     <div className="architecture-flow">
                                         <span>CSV Source</span>
-                                        <strong>→</strong>
+                                        <strong>â†’</strong>
                                         <span>Bronze Raw</span>
-                                        <strong>→</strong>
+                                        <strong>â†’</strong>
                                         <span>Silver Clean</span>
-                                        <strong>→</strong>
+                                        <strong>â†’</strong>
                                         <span>Gold Summary</span>
-                                        <strong>→</strong>
+                                        <strong>â†’</strong>
                                         <span>Reporting Views</span>
                                     </div>
                                     <p>
-                                        This page runs the ETL flow through the FinSight API so the
-                                        portfolio demo is stable. The Databricks pipeline planner shows
-                                        how the same flow could be configured for Azure Databricks,
-                                        Lakeflow, and Delta tables.
+                                        The live walkthrough runs through the FinSight API for a stable portfolio
+                                        demo. The Databricks design view documents how the same workflow could be
+                                        implemented with Azure Databricks, Delta tables, Lakeflow-style ingestion,
+                                        backend-managed secrets, and reporting-ready Gold views.
                                     </p>
                                 </section>
                             )}
@@ -971,12 +1058,13 @@ export function IngestionEnginePage() {
             ) : (
                 <>
                     <section className="ingestion-warning-card">
-                        <h2>Secure design note</h2>
+                        <h2>Databricks architecture design</h2>
                         <p>
-                            This page generates a Databricks-style pipeline plan. In a production
-                            environment, this configuration would be submitted to a backend service
-                            that validates credentials, triggers Databricks Jobs or Lakeflow pipelines,
-                            and tracks run status. Secrets are not entered or stored in the browser.
+                            This view shows how the FinSight ingestion workflow maps to an Azure
+                            Databricks medallion architecture. The live demo runs through the FinSight
+                            API, while this design view documents the target Bronze, Silver, Gold,
+                            and reporting configuration that could be implemented with Databricks Jobs,
+                            Lakeflow, Delta tables, and secure backend-managed secrets.
                         </p>
                     </section>
 
@@ -1269,9 +1357,123 @@ export function IngestionEnginePage() {
                         </div>
                     </section>
 
+                    <section className="table-card">
+                        <h2>4. Databricks Job Simulation</h2>
+                        <p>
+                            Validate the design, simulate a Databricks job submission, and check the
+                            simulated run status. This does not call an external Databricks workspace.
+                        </p>
+
+                        <div className="walkthrough-actions">
+                            <button
+                                type="button"
+                                onClick={validateDatabricksDesign}
+                                disabled={isDatabricksActionRunning}
+                            >
+                                Validate Design
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={simulateDatabricksJob}
+                                disabled={isDatabricksActionRunning}
+                            >
+                                Simulate Databricks Job
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={checkDatabricksJobStatus}
+                                disabled={isDatabricksActionRunning || !databricksRun}
+                            >
+                                Check Run Status
+                            </button>
+                        </div>
+
+                        {databricksError && (
+                            <div className="pipeline-error">{databricksError}</div>
+                        )}
+
+                        {databricksValidation && (
+                            <div className="gold-output-card">
+                                <div>
+                                    <h3>Validation: {databricksValidation.status}</h3>
+                                    <p>
+                                        <strong>Valid:</strong>{" "}
+                                        {databricksValidation.isValid ? "Yes" : "No"}
+                                    </p>
+                                    <ul>
+                                        {databricksValidation.messages.map((message) => (
+                                            <li key={message}>{message}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+
+                                <div>
+                                    <h3>Warnings</h3>
+                                    {databricksValidation.warnings.length === 0 ? (
+                                        <p>No warnings.</p>
+                                    ) : (
+                                        <ul>
+                                            {databricksValidation.warnings.map((warning) => (
+                                                <li key={warning}>{warning}</li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {databricksRun && (
+                            <div className="gold-output-card">
+                                <div>
+                                    <h3>Simulated Run</h3>
+                                    <p>
+                                        <strong>Run ID:</strong> {databricksRun.runId}
+                                    </p>
+                                    <p>
+                                        <strong>Status:</strong> {databricksRun.status}
+                                    </p>
+                                    <p>{databricksRun.message}</p>
+                                </div>
+
+                                <div>
+                                    <h3>Planned Steps</h3>
+                                    <ol>
+                                        {databricksRun.plannedSteps.map((step) => (
+                                            <li key={step}>{step}</li>
+                                        ))}
+                                    </ol>
+                                </div>
+                            </div>
+                        )}
+
+                        {databricksStatus && (
+                            <div className="gold-output-card">
+                                <div>
+                                    <h3>Run Status: {databricksStatus.status}</h3>
+                                    <p>
+                                        <strong>Percent Complete:</strong>{" "}
+                                        {databricksStatus.percentComplete}%
+                                    </p>
+                                    <p>{databricksStatus.message}</p>
+                                </div>
+
+                                <div>
+                                    <h3>Completed Steps</h3>
+                                    <ol>
+                                        {databricksStatus.completedSteps.map((step) => (
+                                            <li key={step}>{step}</li>
+                                        ))}
+                                    </ol>
+                                </div>
+                            </div>
+                        )}
+                    </section>
+
                     <section className="ingestion-grid">
                         <div className="table-card">
-                            <h2>4. Generated Pipeline Steps</h2>
+                            <h2>5. Generated Pipeline Steps</h2>
 
                             <ol className="pipeline-step-list">
                                 {pipelinePlan.pipelineSteps.map((step) => (
@@ -1281,7 +1483,7 @@ export function IngestionEnginePage() {
                         </div>
 
                         <div className="table-card">
-                            <h2>Generated Databricks Job Config</h2>
+                            <h2>Target Databricks Design Config</h2>
 
                             <pre className="json-preview">
                                 {JSON.stringify(generatedConfig, null, 2)}

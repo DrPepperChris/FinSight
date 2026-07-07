@@ -16,6 +16,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // CORS
@@ -77,6 +78,8 @@ builder.Services.AddScoped<ITransferService, TransferService>();
 builder.Services.AddScoped<ILoanApplicationRepository, LoanApplicationRepository>();
 builder.Services.AddScoped<ILoanApplicationService, LoanApplicationService>();
 builder.Services.AddScoped<IDataIngestionService, DataIngestionService>();
+builder.Services.AddScoped<IDatabricksJobService, DatabricksJobService>();
+
 // Validation
 builder.Services.AddControllers(options =>
 {
