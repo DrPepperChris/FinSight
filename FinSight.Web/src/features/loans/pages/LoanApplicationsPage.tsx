@@ -6,6 +6,8 @@ import {
 } from "../api/loanApplicationsApi";
 import type { LoanApplication } from "../types/loanApplicationTypes";
 import { useAuth } from "../../auth/authContext/AuthContext";
+import { PaginationControls } from "../../../components/pagination/PaginationControls";
+import { usePagination } from "../../../hooks/usePagination";
 
 export function LoanApplicationsPage() {
     const [loanApplications, setLoanApplications] = React.useState<LoanApplication[]>([]);
@@ -14,8 +16,11 @@ export function LoanApplicationsPage() {
     const [actionLoadingId, setActionLoadingId] = React.useState<number | null>(null);
     const [error, setError] = React.useState("");
     const [message, setMessage] = React.useState("");
+
     const { hasRole } = useAuth();
     const canManageLoans = hasRole(["Admin"]);
+
+    const loanApplicationPage = usePagination(loanApplications, 10);
 
     React.useEffect(() => {
         loadLoanApplications();
@@ -176,8 +181,9 @@ export function LoanApplicationsPage() {
                                 <th>Actions</th>
                             </tr>
                         </thead>
+
                         <tbody>
-                            {loanApplications.map((loanApplication) => {
+                            {loanApplicationPage.rows.map((loanApplication) => {
                                 const status = String(getStatus(loanApplication));
                                 const isFinal =
                                     status.toLowerCase() === "approved" ||
@@ -190,10 +196,15 @@ export function LoanApplicationsPage() {
                                                 loanApplication.customerId ??
                                                 "-"}
                                         </td>
+
                                         <td>{formatCurrency(getAmount(loanApplication))}</td>
+
                                         <td>{getPurpose(loanApplication)}</td>
+
                                         <td>{status}</td>
+
                                         <td>{formatDate(getCreatedDate(loanApplication))}</td>
+
                                         <td>
                                             {canManageLoans && !isFinal ? (
                                                 <div className="table-actions">
@@ -226,6 +237,15 @@ export function LoanApplicationsPage() {
                             })}
                         </tbody>
                     </table>
+
+                    <PaginationControls
+                        currentPage={loanApplicationPage.currentPage}
+                        totalPages={loanApplicationPage.totalPages}
+                        totalRows={loanApplicationPage.totalRows}
+                        pageSize={loanApplicationPage.pageSize}
+                        onPrevious={loanApplicationPage.goPrevious}
+                        onNext={loanApplicationPage.goNext}
+                    />
                 </div>
             )}
         </main>

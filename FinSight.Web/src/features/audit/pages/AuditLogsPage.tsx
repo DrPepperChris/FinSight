@@ -1,11 +1,14 @@
 import React from "react";
 import { getAuditLogs } from "../api/auditLogsApi";
 import type { AuditLog } from "../types/auditLogTypes";
+import { PaginationControls } from "../../../components/pagination/PaginationControls";
+import { usePagination } from "../../../hooks/usePagination";
 
 export function AuditLogsPage() {
     const [auditLogs, setAuditLogs] = React.useState<AuditLog[]>([]);
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState("");
+    const auditLogPage = usePagination(auditLogs, 10);
 
     React.useEffect(() => {
         loadAuditLogs();
@@ -66,7 +69,7 @@ export function AuditLogsPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {auditLogs.map((log) => (
+                            {auditLogPage.rows.map((log) => (
                                 <tr key={log.id}>
                                     <td>{formatDate(log.timestampUtc ?? log.createdDate)}</td>
                                     <td>{log.userName ?? "-"}</td>
@@ -78,6 +81,15 @@ export function AuditLogsPage() {
                             ))}
                         </tbody>
                     </table>
+
+                    <PaginationControls
+                        currentPage={auditLogPage.currentPage}
+                        totalPages={auditLogPage.totalPages}
+                        totalRows={auditLogPage.totalRows}
+                        pageSize={auditLogPage.pageSize}
+                        onPrevious={auditLogPage.goPrevious}
+                        onNext={auditLogPage.goNext}
+                    />
                 </div>
             )}
         </section>

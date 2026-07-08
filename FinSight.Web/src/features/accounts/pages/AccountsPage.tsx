@@ -1,12 +1,15 @@
 import React from "react";
 import { getAccounts } from "../api/accountsApi";
 import type { Account } from "../types/accountTypes";
+import { PaginationControls } from "../../../components/pagination/PaginationControls";
+import { usePagination } from "../../../hooks/usePagination";
 
 export function AccountsPage() {
     const [accounts, setAccounts] = React.useState<Account[]>([]);
     const [totalCount, setTotalCount] = React.useState(0);
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState("");
+    const accountPage = usePagination(accounts, 10);
 
     React.useEffect(() => {
         async function loadAccounts() {
@@ -76,7 +79,7 @@ export function AccountsPage() {
                         </thead>
 
                         <tbody>
-                            {accounts.map((account) => (
+                            {accountPage.rows.map((account) => (
                                 <tr key={account.id}>
                                     <td>{account.accountNumber ?? "-"}</td>
                                     <td>{account.customerName ?? account.customerId ?? "-"}</td>
@@ -87,6 +90,15 @@ export function AccountsPage() {
                             ))}
                         </tbody>
                     </table>
+
+                    <PaginationControls
+                        currentPage={accountPage.currentPage}
+                        totalPages={accountPage.totalPages}
+                        totalRows={accountPage.totalRows}
+                        pageSize={accountPage.pageSize}
+                        onPrevious={accountPage.goPrevious}
+                        onNext={accountPage.goNext}
+                    />
                 </div>
             )}
         </main>

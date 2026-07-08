@@ -1,5 +1,12 @@
 import React from "react";
-import { clearToken, getToken, saveToken } from "../../../lib/tokenStorage";
+import { configureUnauthorizedHandler } from "../../../lib/apiClient";
+import {
+    clearToken,
+    getMillisecondsUntilTokenExpires,
+    getToken,
+    isTokenExpired,
+    saveToken
+} from "../../../lib/tokenStorage";
 
 export type UserRole = "Admin" | "Auditor" | "Analyst";
 
@@ -18,13 +25,15 @@ interface AuthProviderProps {
     children: React.ReactNode;
 }
 
+const IDLE_TIMEOUT_MS = 15 * 60 * 1000;
+
 function getRoleFromToken(token: string | null): UserRole | null {
     if (!token) {
         return null;
     }
 
     try {
-        const payload = JSON.parse(atob(token.split(".")[1])) as Record<string, unknown>;
+        const payload = JSON.parse(atob(token.split(".")[1])) as Record<string, string>;
 
         const role =
             payload.role ??
@@ -42,23 +51,106 @@ function getRoleFromToken(token: string | null): UserRole | null {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-    const [token, setToken] = React.useState<string | null>(() => getToken());
+    const [token, setToken] = React.useState<string | null>(() => {
+        const storedToken = getToken();
+
+        if (!storedToken || isTokenExpired(storedToken)) {
+            clearToken();
+            return null;
+        }
+
+        return storedToken;
+    });
 
     const role = React.useMemo(() => getRoleFromToken(token), [token]);
 
-    function loginUser(newToken: string) {
-        saveToken(newToken);
-        setToken(newToken);
-    }
-
-    function logoutUser() {
+    const logoutUser = React.useCallback(() => {
         clearToken();
         setToken(null);
-    }
+    }, []);
 
-    function hasRole(allowedRoles: UserRole[]) {
-        return Boolean(role && allowedRoles.includes(role));
-    }
+    const loginUser = React.useCallback((newToken: string) => {
+        saveToken(newToken);
+        setToken(newToken);
+    }, []);
+
+    const hasRole = React.useCallback(
+        (allowedRoles: UserRole[]) => {
+            return Boolean(role && allowedRoles.includes(role));
+        },
+        [role]
+    );
+
+    React.useEffect(() => {
+        configureUnauthorizedHandler(logoutUser);
+
+        return () => {
+            configureUnauthorizedHandler(null);
+        };
+    }, [logoutUser]);
+
+    React.useEffect(() => {
+        if (!token) {
+            return;
+        }
+
+        if (isTokenExpired(token)) {
+            logoutUser();
+            return;
+        }
+
+        const millisecondsUntilExpiration = getMillisecondsUntilTokenExpires(token);
+
+        const timeoutId = window.setTimeout(() => {
+            logoutUser();
+        }, millisecondsUntilExpiration);
+
+        return () => {
+            window.clearTimeout(timeoutId);
+        };
+    }, [token, logoutUser]);
+
+    React.useEffect(() => {
+        if (!token) {
+            return;
+        }
+
+        let idleTimeoutId: number | undefined;
+
+        function resetIdleTimer() {
+            if (idleTimeoutId) {
+                window.clearTimeout(idleTimeoutId);
+            }
+
+            idleTimeoutId = window.setTimeout(() => {
+                logoutUser();
+            }, IDLE_TIMEOUT_MS);
+        }
+
+        const activityEvents = [
+            "click",
+            "keydown",
+            "mousemove",
+            "scroll",
+            "touchstart"
+        ];
+
+        activityEvents.forEach((eventName) => {
+            window.addEventListener(eventName, resetIdleTimer);
+        });
+
+        resetIdleTimer();
+
+        return () => {
+            if (idleTimeoutId) {
+                window.clearTimeout(idleTimeoutId);
+            }
+
+            activityEvents.forEach((eventName) => {
+                window.removeEventListener(eventName, resetIdleTimer);
+            });
+        };
+    }, [token, logoutUser]);
 
     const value: AuthContextValue = {
         token,
@@ -69,7 +161,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         hasRole
     };
 
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+    return (
+        <AuthContext.Provider value={value}>
+            {children}
+        </AuthContext.Provider>
+    );
 }
 
 export function useAuth() {
