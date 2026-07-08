@@ -20,6 +20,8 @@ type WalkthroughTab =
     | "errors"
     | "architecture";
 
+const PAGE_SIZE = 10;
+
 interface PipelineStepResult {
     name: string;
     layer: string;
@@ -262,9 +264,6 @@ function getGoldOutputDefinition(id: GoldOutputType) {
     );
 }
 
-
-
-
 export function IngestionEnginePage() {
     const [viewMode, setViewMode] = React.useState<ViewMode>("walkthrough");
 
@@ -309,6 +308,16 @@ export function IngestionEnginePage() {
     const [walkthroughTab, setWalkthroughTab] =
         React.useState<WalkthroughTab>("overview");
 
+    const [tabPages, setTabPages] = React.useState<Record<WalkthroughTab, number>>({
+        overview: 1,
+        bronze: 1,
+        silver: 1,
+        gold: 1,
+        reporting: 1,
+        errors: 1,
+        architecture: 1
+    });
+
     const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
     const [isRunningPipeline, setIsRunningPipeline] = React.useState(false);
     const [pipelineError, setPipelineError] = React.useState<string | null>(null);
@@ -329,6 +338,25 @@ export function IngestionEnginePage() {
         React.useState<string | null>(null);
 
     const goldDefinition = getGoldOutputDefinition(goldOutputType);
+
+    function resetTabPages() {
+        setTabPages({
+            overview: 1,
+            bronze: 1,
+            silver: 1,
+            gold: 1,
+            reporting: 1,
+            errors: 1,
+            architecture: 1
+        });
+    }
+
+    function setTabPage(tab: WalkthroughTab, page: number) {
+        setTabPages((current) => ({
+            ...current,
+            [tab]: page
+        }));
+    }
 
     function toggleTransformation(id: string) {
         setSelectedTransformations((current) =>
@@ -460,7 +488,6 @@ export function IngestionEnginePage() {
                 }
             };
 
-
     function buildDatabricksJobRequest() {
         return {
             sourceType,
@@ -572,6 +599,7 @@ export function IngestionEnginePage() {
 
             setWalkthroughResult(response.data);
             setWalkthroughTab("overview");
+            resetTabPages();
         } catch (error: any) {
             console.error("Sample pipeline error:", error);
 
@@ -600,6 +628,7 @@ export function IngestionEnginePage() {
         setPipelineError(null);
         setWalkthroughResult(null);
         setWalkthroughTab("overview");
+        resetTabPages();
 
         try {
             const formData = new FormData();
@@ -617,6 +646,7 @@ export function IngestionEnginePage() {
 
             setWalkthroughResult(response.data);
             setWalkthroughTab("overview");
+            resetTabPages();
         } catch (error: any) {
             console.error("Upload pipeline error:", error);
 
@@ -654,7 +684,38 @@ export function IngestionEnginePage() {
         setWalkthroughTab("overview");
         setSelectedFile(null);
         setPipelineError(null);
+        resetTabPages();
     }
+
+    const bronzePage = getPagedRows(
+        walkthroughResult?.bronzeRows ?? [],
+        tabPages.bronze,
+        PAGE_SIZE
+    );
+
+    const silverPage = getPagedRows(
+        walkthroughResult?.silverRows ?? [],
+        tabPages.silver,
+        PAGE_SIZE
+    );
+
+    const goldPage = getPagedRows(
+        walkthroughResult?.goldRows ?? [],
+        tabPages.gold,
+        PAGE_SIZE
+    );
+
+    const reportingPage = getPagedRows(
+        walkthroughResult?.reporting.highValueTransactions ?? [],
+        tabPages.reporting,
+        PAGE_SIZE
+    );
+
+    const errorsPage = getPagedRows(
+        walkthroughResult?.rejectedRows ?? [],
+        tabPages.errors,
+        PAGE_SIZE
+    );
 
     return (
         <main className="page">
@@ -718,6 +779,7 @@ export function IngestionEnginePage() {
                                         setWalkthroughResult(null);
                                         setWalkthroughTab("overview");
                                         setPipelineError(null);
+                                        resetTabPages();
                                     }}
                                 />
                             </label>
@@ -869,7 +931,7 @@ export function IngestionEnginePage() {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {walkthroughResult.bronzeRows.map((row) => (
+                                            {bronzePage.rows.map((row) => (
                                                 <tr key={row.rawRowNumber}>
                                                     <td>{row.rawRowNumber}</td>
                                                     <td>{row.transactionId}</td>
@@ -883,6 +945,15 @@ export function IngestionEnginePage() {
                                             ))}
                                         </tbody>
                                     </ResponsiveTable>
+
+                                    <PaginationControls
+                                        currentPage={bronzePage.currentPage}
+                                        totalPages={bronzePage.totalPages}
+                                        totalRows={bronzePage.totalRows}
+                                        pageSize={PAGE_SIZE}
+                                        onPrevious={() => setTabPage("bronze", bronzePage.currentPage - 1)}
+                                        onNext={() => setTabPage("bronze", bronzePage.currentPage + 1)}
+                                    />
                                 </section>
                             )}
 
@@ -907,7 +978,7 @@ export function IngestionEnginePage() {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {walkthroughResult.silverRows.map((row) => (
+                                            {silverPage.rows.map((row) => (
                                                 <tr key={row.transactionId}>
                                                     <td>{row.transactionId}</td>
                                                     <td>{row.customerName}</td>
@@ -920,6 +991,15 @@ export function IngestionEnginePage() {
                                             ))}
                                         </tbody>
                                     </ResponsiveTable>
+
+                                    <PaginationControls
+                                        currentPage={silverPage.currentPage}
+                                        totalPages={silverPage.totalPages}
+                                        totalRows={silverPage.totalRows}
+                                        pageSize={PAGE_SIZE}
+                                        onPrevious={() => setTabPage("silver", silverPage.currentPage - 1)}
+                                        onNext={() => setTabPage("silver", silverPage.currentPage + 1)}
+                                    />
                                 </section>
                             )}
 
@@ -944,7 +1024,7 @@ export function IngestionEnginePage() {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {walkthroughResult.goldRows.map((row) => (
+                                            {goldPage.rows.map((row) => (
                                                 <tr key={`${row.customerId}-${row.accountId}`}>
                                                     <td>{row.customerName}</td>
                                                     <td>{row.accountNumber}</td>
@@ -957,6 +1037,15 @@ export function IngestionEnginePage() {
                                             ))}
                                         </tbody>
                                     </ResponsiveTable>
+
+                                    <PaginationControls
+                                        currentPage={goldPage.currentPage}
+                                        totalPages={goldPage.totalPages}
+                                        totalRows={goldPage.totalRows}
+                                        pageSize={PAGE_SIZE}
+                                        onPrevious={() => setTabPage("gold", goldPage.currentPage - 1)}
+                                        onNext={() => setTabPage("gold", goldPage.currentPage + 1)}
+                                    />
                                 </section>
                             )}
 
@@ -977,7 +1066,7 @@ export function IngestionEnginePage() {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {walkthroughResult.reporting.highValueTransactions.map((row) => (
+                                            {reportingPage.rows.map((row) => (
                                                 <tr key={row.transactionId}>
                                                     <td>{row.customerName}</td>
                                                     <td>{row.accountNumber}</td>
@@ -989,6 +1078,15 @@ export function IngestionEnginePage() {
                                             ))}
                                         </tbody>
                                     </ResponsiveTable>
+
+                                    <PaginationControls
+                                        currentPage={reportingPage.currentPage}
+                                        totalPages={reportingPage.totalPages}
+                                        totalRows={reportingPage.totalRows}
+                                        pageSize={PAGE_SIZE}
+                                        onPrevious={() => setTabPage("reporting", reportingPage.currentPage - 1)}
+                                        onNext={() => setTabPage("reporting", reportingPage.currentPage + 1)}
+                                    />
 
                                     <h3>Transaction Volume by Type</h3>
                                     <div className="metric-grid">
@@ -1010,22 +1108,33 @@ export function IngestionEnginePage() {
                                     {walkthroughResult.rejectedRows.length === 0 ? (
                                         <p>No rejected rows. All records passed validation.</p>
                                     ) : (
-                                        <ResponsiveTable>
-                                            <thead>
-                                                <tr>
-                                                    <th>Raw Row</th>
-                                                    <th>Reason</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {walkthroughResult.rejectedRows.map((row) => (
-                                                    <tr key={row.rawRowNumber}>
-                                                        <td>{row.rawRowNumber}</td>
-                                                        <td>{row.reason}</td>
+                                        <>
+                                            <ResponsiveTable>
+                                                <thead>
+                                                    <tr>
+                                                        <th>Raw Row</th>
+                                                        <th>Reason</th>
                                                     </tr>
-                                                ))}
-                                            </tbody>
-                                        </ResponsiveTable>
+                                                </thead>
+                                                <tbody>
+                                                    {errorsPage.rows.map((row) => (
+                                                        <tr key={row.rawRowNumber}>
+                                                            <td>{row.rawRowNumber}</td>
+                                                            <td>{row.reason}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </ResponsiveTable>
+
+                                            <PaginationControls
+                                                currentPage={errorsPage.currentPage}
+                                                totalPages={errorsPage.totalPages}
+                                                totalRows={errorsPage.totalRows}
+                                                pageSize={PAGE_SIZE}
+                                                onPrevious={() => setTabPage("errors", errorsPage.currentPage - 1)}
+                                                onNext={() => setTabPage("errors", errorsPage.currentPage + 1)}
+                                            />
+                                        </>
                                     )}
                                 </section>
                             )}
@@ -1526,4 +1635,76 @@ function formatDate(value: string) {
     }
 
     return value.split("T")[0];
+}
+
+function getPagedRows<T>(rows: T[], currentPage: number, pageSize: number) {
+    const totalRows = rows.length;
+    const totalPages = Math.max(Math.ceil(totalRows / pageSize), 1);
+    const safePage = Math.min(Math.max(currentPage, 1), totalPages);
+    const startIndex = (safePage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+
+    return {
+        rows: rows.slice(startIndex, endIndex),
+        currentPage: safePage,
+        totalPages,
+        totalRows
+    };
+}
+
+interface PaginationControlsProps {
+    currentPage: number;
+    totalPages: number;
+    totalRows: number;
+    pageSize: number;
+    onPrevious: () => void;
+    onNext: () => void;
+}
+
+function PaginationControls({
+    currentPage,
+    totalPages,
+    totalRows,
+    pageSize,
+    onPrevious,
+    onNext
+}: PaginationControlsProps) {
+    if (totalRows <= pageSize) {
+        return null;
+    }
+
+    const startRow = (currentPage - 1) * pageSize + 1;
+    const endRow = Math.min(currentPage * pageSize, totalRows);
+
+    return (
+        <div className="pagination-controls">
+            <span>
+                Showing {startRow}-{endRow} of {totalRows}
+            </span>
+
+            <div>
+                <button
+                    type="button"
+                    className="secondary-action"
+                    onClick={onPrevious}
+                    disabled={currentPage <= 1}
+                >
+                    Previous
+                </button>
+
+                <span>
+                    Page {currentPage} of {totalPages}
+                </span>
+
+                <button
+                    type="button"
+                    className="secondary-action"
+                    onClick={onNext}
+                    disabled={currentPage >= totalPages}
+                >
+                    Next
+                </button>
+            </div>
+        </div>
+    );
 }

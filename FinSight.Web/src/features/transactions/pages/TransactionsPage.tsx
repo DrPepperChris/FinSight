@@ -3,6 +3,8 @@ import { getAccounts } from "../../accounts/api/accountsApi";
 import type { Account } from "../../accounts/types/accountTypes";
 import { getAccountTransactions } from "../api/transactionsApi";
 import type { Transaction } from "../types/transactionTypes";
+import { PaginationControls } from "../../../components/pagination/PaginationControls";
+import { usePagination } from "../../../hooks/usePagination";
 
 export function TransactionsPage() {
     const [accounts, setAccounts] = React.useState<Account[]>([]);
@@ -11,6 +13,7 @@ export function TransactionsPage() {
     const [loadingAccounts, setLoadingAccounts] = React.useState(true);
     const [loadingTransactions, setLoadingTransactions] = React.useState(false);
     const [error, setError] = React.useState("");
+    const transactionPage = usePagination(transactions, 10);
 
     React.useEffect(() => {
         async function loadAccounts() {
@@ -142,7 +145,7 @@ export function TransactionsPage() {
                                 </thead>
 
                                 <tbody>
-                                    {transactions.map((transaction) => (
+                                    {transactionPage.rows.map((transaction) => (
                                         <tr key={transaction.id}>
                                             <td>
                                                 {formatDate(
@@ -161,6 +164,15 @@ export function TransactionsPage() {
                                     ))}
                                 </tbody>
                             </table>
+
+                            <PaginationControls
+                                currentPage={transactionPage.currentPage}
+                                totalPages={transactionPage.totalPages}
+                                totalRows={transactionPage.totalRows}
+                                pageSize={transactionPage.pageSize}
+                                onPrevious={transactionPage.goPrevious}
+                                onNext={transactionPage.goNext}
+                            />
                         </div>
                     )}
                 </>

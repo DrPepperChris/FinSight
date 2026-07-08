@@ -1,12 +1,15 @@
 import React from "react";
 import { getCustomers } from "../api/customersApi";
 import type { Customer } from "../types/customerTypes";
+import { PaginationControls } from "../../../components/pagination/PaginationControls";
+import { usePagination } from "../../../hooks/usePagination";
 
 export function CustomersPage() {
     const [customers, setCustomers] = React.useState<Customer[]>([]);
     const [totalCount, setTotalCount] = React.useState(0);
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState("");
+    const customerPage = usePagination(customers, 10);
 
     React.useEffect(() => {
         async function loadCustomers() {
@@ -63,7 +66,7 @@ export function CustomersPage() {
                         </thead>
 
                         <tbody>
-                            {customers.map((customer) => (
+                            {customerPage.rows.map((customer) => (
                                 <tr key={customer.id}>
                                     <td>{customer.customerNumber}</td>
                                     <td>
@@ -80,6 +83,15 @@ export function CustomersPage() {
                             ))}
                         </tbody>
                     </table>
+
+                    <PaginationControls
+                        currentPage={customerPage.currentPage}
+                        totalPages={customerPage.totalPages}
+                        totalRows={customerPage.totalRows}
+                        pageSize={customerPage.pageSize}
+                        onPrevious={customerPage.goPrevious}
+                        onNext={customerPage.goNext}
+                    />
                 </div>
             )}
         </main>
