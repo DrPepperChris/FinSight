@@ -8,6 +8,14 @@ import type { LoanApplication } from "../types/loanApplicationTypes";
 import { useAuth } from "../../auth/authContext/AuthContext";
 import { PaginationControls } from "../../../components/pagination/PaginationControls";
 import { usePagination } from "../../../hooks/usePagination";
+import { TableSearchSortBar } from "../../../components/table/TableSearchSortBar";
+
+type LoanSortField =
+    | "customer"
+    | "amount"
+    | "purpose"
+    | "status"
+    | "submitted";
 
 export function LoanApplicationsPage() {
     const [loanApplications, setLoanApplications] = React.useState<LoanApplication[]>([]);
@@ -17,10 +25,15 @@ export function LoanApplicationsPage() {
     const [error, setError] = React.useState("");
     const [message, setMessage] = React.useState("");
 
+    const [isSearchOpen, setIsSearchOpen] = React.useState(false);
+    const [searchTerm, setSearchTerm] = React.useState("");
+    const [sortField, setSortField] =
+        React.useState<LoanSortField>("submitted");
+    const [sortDirection, setSortDirection] =
+        React.useState<"asc" | "desc">("desc");
+
     const { hasRole } = useAuth();
     const canManageLoans = hasRole(["Admin"]);
-
-    const loanApplicationPage = usePagination(loanApplications, 10);
 
     React.useEffect(() => {
         loadLoanApplications();
@@ -146,6 +159,86 @@ export function LoanApplicationsPage() {
         );
     }
 
+    function getCreatedDateValue(loanApplication: LoanApplication) {
+        const dateValue = getCreatedDate(loanApplication);
+
+        return dateValue ? new Date(dateValue).getTime() : 0;
+    }
+
+    function getSearchText(loanApplication: LoanApplication) {
+        return [
+            loanApplication.customerName,
+            loanApplication.customerId,
+            getAmount(loanApplication),
+            getPurpose(loanApplication),
+            getStatus(loanApplication),
+            formatDate(getCreatedDate(loanApplication))
+        ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+    }
+
+    function getSortValue(
+        loanApplication: LoanApplication,
+        field: LoanSortField
+    ) {
+        switch (field) {
+            case "customer":
+                return String(
+                    loanApplication.customerName ??
+                    loanApplication.customerId ??
+                    ""
+                );
+
+            case "amount":
+                return getAmount(loanApplication) ?? 0;
+
+            case "purpose":
+                return String(getPurpose(loanApplication));
+
+            case "status":
+                return String(getStatus(loanApplication));
+
+            case "submitted":
+                return getCreatedDateValue(loanApplication);
+
+            default:
+                return "";
+        }
+    }
+
+    const sortedLoanApplications = React.useMemo(() => {
+        const normalizedSearch = searchTerm.trim().toLowerCase();
+
+        const searchedLoanApplications = loanApplications.filter((loanApplication) => {
+            return (
+                !normalizedSearch ||
+                getSearchText(loanApplication).includes(normalizedSearch)
+            );
+        });
+
+        return [...searchedLoanApplications].sort((a, b) => {
+            const aValue = getSortValue(a, sortField);
+            const bValue = getSortValue(b, sortField);
+
+            if (typeof aValue === "number" && typeof bValue === "number") {
+                return sortDirection === "asc"
+                    ? aValue - bValue
+                    : bValue - aValue;
+            }
+
+            const result = String(aValue).localeCompare(String(bValue), undefined, {
+                numeric: true,
+                sensitivity: "base"
+            });
+
+            return sortDirection === "asc" ? result : -result;
+        });
+    }, [loanApplications, searchTerm, sortField, sortDirection]);
+
+    const loanApplicationPage = usePagination(sortedLoanApplications, 10);
+
     return (
         <main className="page">
             <div className="page-header">
@@ -154,8 +247,8 @@ export function LoanApplicationsPage() {
             </div>
 
             <p>
-                Status: {loading ? "Loading" : "Finished"} | Count:{" "}
-                {loanApplications.length} | Total: {totalCount}
+                Status: {loading ? "Loading" : "Finished"} | Showing:{" "}
+                {sortedLoanApplications.length} | Total: {totalCount}
             </p>
 
             {loading && <p>Loading loan applications...</p>}
@@ -170,82 +263,115 @@ export function LoanApplicationsPage() {
 
             {!loading && !error && loanApplications.length > 0 && (
                 <div className="table-card">
-                    <table className="data-table">
-                        <thead>
-                            <tr>
-                                <th>Customer</th>
-                                <th>Amount</th>
-                                <th>Purpose</th>
-                                <th>Status</th>
-                                <th>Submitted</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {loanApplicationPage.rows.map((loanApplication) => {
-                                const status = String(getStatus(loanApplication));
-                                const isFinal =
-                                    status.toLowerCase() === "approved" ||
-                                    status.toLowerCase() === "rejected";
-
-                                return (
-                                    <tr key={loanApplication.id}>
-                                        <td>
-                                            {loanApplication.customerName ??
-                                                loanApplication.customerId ??
-                                                "-"}
-                                        </td>
-
-                                        <td>{formatCurrency(getAmount(loanApplication))}</td>
-
-                                        <td>{getPurpose(loanApplication)}</td>
-
-                                        <td>{status}</td>
-
-                                        <td>{formatDate(getCreatedDate(loanApplication))}</td>
-
-                                        <td>
-                                            {canManageLoans && !isFinal ? (
-                                                <div className="table-actions">
-                                                    <button
-                                                        type="button"
-                                                        className="small-button"
-                                                        disabled={actionLoadingId === loanApplication.id}
-                                                        onClick={() => handleApprove(loanApplication.id)}
-                                                    >
-                                                        Approve
-                                                    </button>
-
-                                                    <button
-                                                        type="button"
-                                                        className="small-button danger-button"
-                                                        disabled={actionLoadingId === loanApplication.id}
-                                                        onClick={() => handleReject(loanApplication.id)}
-                                                    >
-                                                        Reject
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <span className="muted-text">
-                                                    {isFinal ? "Final" : "Read only"}
-                                                </span>
-                                            )}
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-
-                    <PaginationControls
-                        currentPage={loanApplicationPage.currentPage}
-                        totalPages={loanApplicationPage.totalPages}
-                        totalRows={loanApplicationPage.totalRows}
-                        pageSize={loanApplicationPage.pageSize}
-                        onPrevious={loanApplicationPage.goPrevious}
-                        onNext={loanApplicationPage.goNext}
+                    <TableSearchSortBar<LoanSortField>
+                        isSearchOpen={isSearchOpen}
+                        searchTerm={searchTerm}
+                        searchPlaceholder="Search loans..."
+                        sortField={sortField}
+                        sortDirection={sortDirection}
+                        sortOptions={[
+                            { value: "customer", label: "Customer" },
+                            { value: "amount", label: "Amount" },
+                            { value: "purpose", label: "Purpose" },
+                            { value: "status", label: "Status" },
+                            { value: "submitted", label: "Submitted" }
+                        ]}
+                        onToggleSearch={() => setIsSearchOpen((current) => !current)}
+                        onSearchTermChange={setSearchTerm}
+                        onSortFieldChange={setSortField}
+                        onSortDirectionChange={setSortDirection}
                     />
+
+                    {sortedLoanApplications.length === 0 ? (
+                        <p>No loan applications match your search.</p>
+                    ) : (
+                        <>
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Customer</th>
+                                        <th>Amount</th>
+                                        <th>Purpose</th>
+                                        <th>Status</th>
+                                        <th>Submitted</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    {loanApplicationPage.rows.map((loanApplication) => {
+                                        const status = String(getStatus(loanApplication));
+                                        const isFinal =
+                                            status.toLowerCase() === "approved" ||
+                                            status.toLowerCase() === "rejected";
+
+                                        return (
+                                            <tr key={loanApplication.id}>
+                                                <td>
+                                                    {loanApplication.customerName ??
+                                                        loanApplication.customerId ??
+                                                        "-"}
+                                                </td>
+
+                                                <td>{formatCurrency(getAmount(loanApplication))}</td>
+
+                                                <td>{getPurpose(loanApplication)}</td>
+
+                                                <td>{status}</td>
+
+                                                <td>{formatDate(getCreatedDate(loanApplication))}</td>
+
+                                                <td>
+                                                    {canManageLoans && !isFinal ? (
+                                                        <div className="table-actions">
+                                                            <button
+                                                                type="button"
+                                                                className="small-button"
+                                                                disabled={
+                                                                    actionLoadingId === loanApplication.id
+                                                                }
+                                                                onClick={() =>
+                                                                    handleApprove(loanApplication.id)
+                                                                }
+                                                            >
+                                                                Approve
+                                                            </button>
+
+                                                            <button
+                                                                type="button"
+                                                                className="small-button danger-button"
+                                                                disabled={
+                                                                    actionLoadingId === loanApplication.id
+                                                                }
+                                                                onClick={() =>
+                                                                    handleReject(loanApplication.id)
+                                                                }
+                                                            >
+                                                                Reject
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="muted-text">
+                                                            {isFinal ? "Final" : "Read only"}
+                                                        </span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+
+                            <PaginationControls
+                                currentPage={loanApplicationPage.currentPage}
+                                totalPages={loanApplicationPage.totalPages}
+                                totalRows={loanApplicationPage.totalRows}
+                                pageSize={loanApplicationPage.pageSize}
+                                onPrevious={loanApplicationPage.goPrevious}
+                                onNext={loanApplicationPage.goNext}
+                            />
+                        </>
+                    )}
                 </div>
             )}
         </main>
