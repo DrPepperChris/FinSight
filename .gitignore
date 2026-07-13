@@ -31,3 +31,13 @@ Thumbs.db
 # Visual Studio Azure publish/deployment files
 **/Properties/PublishProfiles/
 **/ServiceDependencies/
+# Python / FinSight ML
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
