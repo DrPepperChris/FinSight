@@ -940,3 +940,12 @@ select {
         max-width: none;
     }
 }
+.ml-ai-grid {
+    grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 900px) {
+    .ml-ai-grid {
+        grid-template-columns: 1fr;
+    }
+}
