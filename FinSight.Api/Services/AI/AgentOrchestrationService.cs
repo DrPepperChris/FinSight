@@ -279,22 +279,32 @@ public class AgentOrchestrationService : IAgentOrchestrationService
     private static string DetectIntent(string message)
     {
         if (ContainsAny(
-                message,
-                "company standard",
-                "company standards",
-                "standard for the company",
-                "used for all business units",
-                "business units",
-                "single code logic",
-                "code logic",
-                "only after i review",
-                "after i review",
-                "draft standard",
-                "approved standard"))
-        {
-            return "CompanyStandardDocument";
-        }
-
+        message,
+        "company standard",
+        "company standards",
+        "standard for the company",
+        "used for all business units",
+        "business units",
+        "single code logic",
+        "code logic",
+        "only after i review",
+        "after i review",
+        "draft standard",
+        "approved standard",
+        "use this file as a reference",
+        "use this file as a standard",
+        "reference standard",
+        "reference / standard",
+        "unit test standard",
+        "unit tests",
+        "unit test",
+        "testing standard",
+        "test standard",
+        "standard for unit tests",
+        "standard for testing"))
+{
+    return "CompanyStandardDocument";
+}        
         if (ContainsAny(
                 message,
                 "llm",
@@ -391,79 +401,189 @@ public class AgentOrchestrationService : IAgentOrchestrationService
     }
 
     private static string BuildCompanyStandardMarkdown(string originalRequest)
+{
+    var markdown = new StringBuilder();
+    var isCustomerExample = ContainsAny(originalRequest, "customer", "customers");
+    var wantsUml = ContainsAny(originalRequest, "uml", "diagram", "dependencies", "connections");
+    var wantsDocx = ContainsAny(originalRequest, "docx", "word document", "document");
+
+    markdown.AppendLine("# FinSight Company Code Logic Standard");
+    markdown.AppendLine();
+    markdown.AppendLine("## Document Status");
+    markdown.AppendLine();
+    markdown.AppendLine("Status: Draft for review");
+    markdown.AppendLine();
+    markdown.AppendLine("Approval Required: Yes");
+    markdown.AppendLine();
+    markdown.AppendLine("Gold Knowledge Promotion: Not approved");
+    markdown.AppendLine();
+    markdown.AppendLine("This document is a proposed company standard. It must be reviewed and approved before it is treated as an official standard across business units.");
+    markdown.AppendLine();
+
+    if (wantsDocx)
     {
-        var markdown = new StringBuilder();
-
-        markdown.AppendLine("# Company Code Logic Standard");
+        markdown.AppendLine("## DOCX Export Intent");
         markdown.AppendLine();
-        markdown.AppendLine("## Status");
+        markdown.AppendLine("This proposal is structured so it can later be exported into a DOCX company standard document with headings, diagrams, approval fields, and version history.");
         markdown.AppendLine();
-        markdown.AppendLine("Draft for review.");
-        markdown.AppendLine();
-        markdown.AppendLine("This document is a proposed company standard. It must be reviewed and approved before it is treated as an official standard across business units.");
-        markdown.AppendLine();
-        markdown.AppendLine("## Purpose");
-        markdown.AppendLine();
-        markdown.AppendLine("Define a single reusable code logic pattern that can be applied consistently across FinSight business units and future feature development.");
-        markdown.AppendLine();
-        markdown.AppendLine("## Original Request");
-        markdown.AppendLine();
-        markdown.AppendLine(originalRequest);
-        markdown.AppendLine();
-        markdown.AppendLine("## Standard");
-        markdown.AppendLine();
-        markdown.AppendLine("All reusable business logic should be implemented behind a service boundary and exposed through explicit DTO contracts.");
-        markdown.AppendLine();
-        markdown.AppendLine("The preferred pattern is:");
-        markdown.AppendLine();
-        markdown.AppendLine("1. Define request and response DTOs in the Core project.");
-        markdown.AppendLine("2. Define an interface for the business capability.");
-        markdown.AppendLine("3. Implement the service behind that interface.");
-        markdown.AppendLine("4. Expose the behavior through a controller endpoint.");
-        markdown.AppendLine("5. Consume the endpoint through the shared frontend API client.");
-        markdown.AppendLine("6. Keep generated output reviewable before it becomes an approved standard.");
-        markdown.AppendLine();
-        markdown.AppendLine("## Required Code Structure");
-        markdown.AppendLine();
-        markdown.AppendLine("FinSight.Core/DTOs/FeatureName/FeatureNameRequest.cs");
-        markdown.AppendLine("FinSight.Core/DTOs/FeatureName/FeatureNameResponse.cs");
-        markdown.AppendLine("FinSight.Core/Interfaces/IFeatureNameService.cs");
-        markdown.AppendLine("FinSight.Api/Services/Area/FeatureNameService.cs");
-        markdown.AppendLine("FinSight.Api/Controllers/FeatureNameController.cs");
-        markdown.AppendLine("FinSight.Web/src/features/featureName/api/featureNameApi.ts");
-        markdown.AppendLine("FinSight.Web/src/features/featureName/types/featureNameTypes.ts");
-        markdown.AppendLine("FinSight.Web/src/features/featureName/pages/FeatureNamePage.tsx");
-        markdown.AppendLine();
-        markdown.AppendLine("## Rules");
-        markdown.AppendLine();
-        markdown.AppendLine("- Reuse existing methods before creating new logic.");
-        markdown.AppendLine("- Keep DTOs explicit and purpose-specific.");
-        markdown.AppendLine("- Keep controller actions thin.");
-        markdown.AppendLine("- Keep business logic inside services.");
-        markdown.AppendLine("- Use dependency injection for service boundaries.");
-        markdown.AppendLine("- Use the shared frontend apiClient for HTTP calls.");
-        markdown.AppendLine("- Require human review before promoting generated standards to approved company knowledge.");
-        markdown.AppendLine("- Do not include secrets, credentials, tokens, or connection strings in documentation or generated code.");
-        markdown.AppendLine();
-        markdown.AppendLine("## Review Checklist");
-        markdown.AppendLine();
-        markdown.AppendLine("- Does this standard match the existing FinSight architecture?");
-        markdown.AppendLine("- Does it support multiple business units?");
-        markdown.AppendLine("- Does it avoid duplicating existing methods?");
-        markdown.AppendLine("- Does it follow current DTO, service, controller, and React feature conventions?");
-        markdown.AppendLine("- Has it been reviewed before Gold promotion?");
-        markdown.AppendLine();
-        markdown.AppendLine("## Approval");
-        markdown.AppendLine();
-        markdown.AppendLine("Approved By:");
-        markdown.AppendLine();
-        markdown.AppendLine("Approval Date:");
-        markdown.AppendLine();
-        markdown.AppendLine("Notes:");
-
-        return markdown.ToString();
     }
 
+    markdown.AppendLine("## Purpose");
+    markdown.AppendLine();
+    markdown.AppendLine("Define a reusable code logic standard that can be applied consistently across FinSight business units, APIs, services, DTOs, frontend features, and database-backed workflows.");
+    markdown.AppendLine();
+    markdown.AppendLine("## Original Request");
+    markdown.AppendLine();
+    markdown.AppendLine(originalRequest);
+    markdown.AppendLine();
+
+    markdown.AppendLine("## Standard Summary");
+    markdown.AppendLine();
+    markdown.AppendLine("All reusable business logic should be implemented behind explicit service boundaries and exposed through clear DTO contracts. Controllers should remain thin, services should own business rules, data access should remain isolated, and frontend features should use the shared API client.");
+    markdown.AppendLine();
+
+    markdown.AppendLine("## Required Pattern");
+    markdown.AppendLine();
+    markdown.AppendLine("1. Define request and response DTOs in the Core project.");
+    markdown.AppendLine("2. Define an interface for the business capability.");
+    markdown.AppendLine("3. Implement the service behind that interface.");
+    markdown.AppendLine("4. Keep controller actions thin and focused on request/response behavior.");
+    markdown.AppendLine("5. Keep data access behind repository, DbContext, or service-layer abstractions.");
+    markdown.AppendLine("6. Consume backend endpoints through the shared frontend apiClient.");
+    markdown.AppendLine("7. Add tests for validation, authorization, happy path, and failure path.");
+    markdown.AppendLine("8. Keep generated standards draft-only until approved.");
+    markdown.AppendLine();
+
+    if (isCustomerExample)
+    {
+        markdown.AppendLine("## First Example: Customers Business Logic Unit");
+        markdown.AppendLine();
+        markdown.AppendLine("The Customers feature should act as the first reference implementation for this standard.");
+        markdown.AppendLine();
+        markdown.AppendLine("### Customer Logic Responsibilities");
+        markdown.AppendLine();
+        markdown.AppendLine("- Validate customer creation requests.");
+        markdown.AppendLine("- Prevent duplicate customer records where applicable.");
+        markdown.AppendLine("- Return DTOs instead of exposing database entities directly.");
+        markdown.AppendLine("- Enforce role-based access through controller authorization.");
+        markdown.AppendLine("- Keep business validation in the service layer.");
+        markdown.AppendLine("- Keep frontend access behind the shared apiClient.");
+        markdown.AppendLine();
+
+        markdown.AppendLine("### Expected Customer Code Boundaries");
+        markdown.AppendLine();
+        markdown.AppendLine("- CustomersController: handles HTTP request/response and authorization.");
+        markdown.AppendLine("- ICustomerService: defines the business capability contract.");
+        markdown.AppendLine("- CustomerService: owns customer business rules and orchestration.");
+        markdown.AppendLine("- CustomerDto / CreateCustomerRequest: define external API contracts.");
+        markdown.AppendLine("- Customer entity/table: stores persisted customer data.");
+        markdown.AppendLine("- customersApi.ts: frontend API wrapper using shared apiClient.");
+        markdown.AppendLine("- CustomersPage.tsx: frontend user experience.");
+        markdown.AppendLine();
+    }
+
+    if (wantsUml || isCustomerExample)
+    {
+        markdown.AppendLine("## UML / Dependency Diagram");
+        markdown.AppendLine();
+        markdown.AppendLine("The following Mermaid diagram can be rendered in supported markdown tools and later converted into a DOCX diagram image.");
+        markdown.AppendLine();
+        markdown.AppendLine("```mermaid");
+        markdown.AppendLine("flowchart TD");
+        markdown.AppendLine("    User[Authorized User]");
+        markdown.AppendLine("    ReactPage[CustomersPage.tsx]");
+        markdown.AppendLine("    ApiClient[Shared apiClient]");
+        markdown.AppendLine("    Controller[CustomersController]");
+        markdown.AppendLine("    ServiceInterface[ICustomerService]");
+        markdown.AppendLine("    Service[CustomerService]");
+        markdown.AppendLine("    Dtos[Customer DTOs]");
+        markdown.AppendLine("    DbContext[FinSight DbContext]");
+        markdown.AppendLine("    CustomerTable[(Customers Table)]");
+        markdown.AppendLine("    AuditLogs[(Audit Logs)]");
+        markdown.AppendLine();
+        markdown.AppendLine("    User --> ReactPage");
+        markdown.AppendLine("    ReactPage --> ApiClient");
+        markdown.AppendLine("    ApiClient --> Controller");
+        markdown.AppendLine("    Controller --> Dtos");
+        markdown.AppendLine("    Controller --> ServiceInterface");
+        markdown.AppendLine("    ServiceInterface --> Service");
+        markdown.AppendLine("    Service --> DbContext");
+        markdown.AppendLine("    DbContext --> CustomerTable");
+        markdown.AppendLine("    Service --> AuditLogs");
+        markdown.AppendLine("```");
+        markdown.AppendLine();
+    }
+
+    markdown.AppendLine("## Database Table Dependencies");
+    markdown.AppendLine();
+
+    if (isCustomerExample)
+    {
+        markdown.AppendLine("| Table | Purpose | Used By | Notes |");
+        markdown.AppendLine("|---|---|---|---|");
+        markdown.AppendLine("| Customers | Stores customer profile records | CustomerService, CustomersController | Should not be exposed directly to the frontend |");
+        markdown.AppendLine("| Accounts | Linked financial accounts | AccountService, Customers views where applicable | Customer dependency should be read through service/API boundaries |");
+        markdown.AppendLine("| Transactions | Customer-related account activity | Transaction services and analytics | Should be accessed through transaction/account logic, not directly from customer UI |");
+        markdown.AppendLine("| AuditLogs | Tracks business/system actions | Audit services, compliance views | Should capture important AI/documentation/standard changes later |");
+    }
+    else
+    {
+        markdown.AppendLine("Database dependencies should be listed for each business unit before the standard is approved.");
+    }
+
+    markdown.AppendLine();
+    markdown.AppendLine("## Standard File Structure");
+    markdown.AppendLine();
+    markdown.AppendLine("FinSight.Core/DTOs/<FeatureName>/<FeatureName>Request.cs");
+    markdown.AppendLine("FinSight.Core/DTOs/<FeatureName>/<FeatureName>Response.cs");
+    markdown.AppendLine("FinSight.Core/Interfaces/I<FeatureName>Service.cs");
+    markdown.AppendLine("FinSight.Api/Services/<Area>/<FeatureName>Service.cs");
+    markdown.AppendLine("FinSight.Api/Controllers/<FeatureName>Controller.cs");
+    markdown.AppendLine("FinSight.Web/src/features/<featureName>/api/<featureName>Api.ts");
+    markdown.AppendLine("FinSight.Web/src/features/<featureName>/types/<featureName>Types.ts");
+    markdown.AppendLine("FinSight.Web/src/features/<featureName>/pages/<FeatureName>Page.tsx");
+    markdown.AppendLine();
+
+    markdown.AppendLine("## Company-Wide Rules");
+    markdown.AppendLine();
+    markdown.AppendLine("- Reuse existing methods before creating new logic.");
+    markdown.AppendLine("- Keep DTOs explicit and purpose-specific.");
+    markdown.AppendLine("- Keep controller actions thin.");
+    markdown.AppendLine("- Keep business logic inside services.");
+    markdown.AppendLine("- Use dependency injection for service boundaries.");
+    markdown.AppendLine("- Use the shared frontend apiClient for HTTP calls.");
+    markdown.AppendLine("- Add authorization and role validation where needed.");
+    markdown.AppendLine("- Add audit logging for company-standard changes and AI-assisted proposals.");
+    markdown.AppendLine("- Require human review before promoting generated standards to approved company knowledge.");
+    markdown.AppendLine("- Do not include secrets, credentials, tokens, or connection strings in documentation or generated code.");
+    markdown.AppendLine();
+
+    markdown.AppendLine("## Review Checklist");
+    markdown.AppendLine();
+    markdown.AppendLine("- Does this standard match the existing FinSight architecture?");
+    markdown.AppendLine("- Does it support multiple business units?");
+    markdown.AppendLine("- Does it avoid duplicating existing methods?");
+    markdown.AppendLine("- Does it follow current DTO, service, controller, and React feature conventions?");
+    markdown.AppendLine("- Are database dependencies clearly documented?");
+    markdown.AppendLine("- Are upstream and downstream business logic dependencies documented?");
+    markdown.AppendLine("- Has the document been reviewed before Gold promotion?");
+    markdown.AppendLine();
+
+    markdown.AppendLine("## Approval");
+    markdown.AppendLine();
+    markdown.AppendLine("Approved By:");
+    markdown.AppendLine();
+    markdown.AppendLine("Approval Date:");
+    markdown.AppendLine();
+    markdown.AppendLine("Business Units Covered:");
+    markdown.AppendLine();
+    markdown.AppendLine("Exceptions:");
+    markdown.AppendLine();
+    markdown.AppendLine("Notes:");
+
+    return markdown.ToString();
+}
+    
     private static bool ContainsAny(string value, params string[] terms)
     {
         return terms.Any(term =>

@@ -1152,3 +1152,20 @@ select {
         grid-template-columns: 1fr;
     }
 }
+
+.ml-ai-document-output {
+    margin-top: 1rem;
+}
+
+.ml-ai-document-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.ml-ai-document-actions div {
+    display: flex;
+    gap: 0.5rem;
+}

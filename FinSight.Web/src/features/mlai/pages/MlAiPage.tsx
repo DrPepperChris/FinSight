@@ -1,5 +1,9 @@
 ﻿import React from "react";
-import { chatWithAgent, uploadAgentFile } from "../api/mlAiApi";
+import {
+    chatWithAgent,
+    exportAgentDocumentDocx,
+    uploadAgentFile
+} from "../api/mlAiApi";
 import type {
     AgentChatResponse,
     AgentUploadedFileResponse
@@ -11,6 +15,10 @@ interface AgentMessage {
     text: string;
     response?: AgentChatResponse;
     upload?: AgentUploadedFileResponse;
+}
+
+function createMessageId() {
+    return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
 function ListBlock({ title, items }: { title: string; items?: string[] }) {
@@ -65,6 +73,56 @@ function UploadStatusCard({ upload }: { upload: AgentUploadedFileResponse }) {
 }
 
 function AgentResponseCard({ response }: { response: AgentChatResponse }) {
+    async function downloadDocx() {
+        if (!response.proposedMarkdown) {
+            alert("No proposed markdown found to export.");
+            return;
+        }
+
+        try {
+            const blob = await exportAgentDocumentDocx({
+                fileName: "finsight-company-standard-draft.docx",
+                title: "FinSight Company Standard Draft",
+                markdown: response.proposedMarkdown
+            });
+
+            const docxBlob = new Blob([blob], {
+                type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            });
+
+            const url = URL.createObjectURL(docxBlob);
+            const link = document.createElement("a");
+
+            link.href = url;
+            link.download = "finsight-company-standard-draft.docx";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error("DOCX export failed:", err);
+            alert("DOCX export failed. Check the browser console and API terminal for the exact error.");
+        }
+    }
+
+    function downloadMarkdown() {
+        const blob = new Blob([response.proposedMarkdown ?? ""], {
+            type: "text/markdown;charset=utf-8"
+        });
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+
+        link.href = url;
+        link.download = "finsight-company-standard-draft.md";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        URL.revokeObjectURL(url);
+    }
+
     return (
         <div className="ml-ai-agent-response-card">
             <div className="ml-ai-response-header">
@@ -82,27 +140,62 @@ function AgentResponseCard({ response }: { response: AgentChatResponse }) {
             <ListBlock title="Implementation Steps" items={response.implementationSteps} />
 
             {response.proposedMarkdown && (
-                <>
-                    <strong>Proposed Markdown</strong>
+                <div className="ml-ai-document-output">
+                    <div className="ml-ai-document-actions">
+                        <strong>Proposed Document Draft</strong>
+
+                        <div>
+                            <button
+                                type="button"
+                                className="secondary-button"
+                                onClick={() =>
+                                    navigator.clipboard.writeText(
+                                        response.proposedMarkdown ?? ""
+                                    )
+                                }
+                            >
+                                Copy Markdown
+                            </button>
+
+                            <button
+                                type="button"
+                                className="secondary-button"
+                                onClick={downloadMarkdown}
+                            >
+                                Download Draft
+                            </button>
+
+                            <button
+                                type="button"
+                                className="secondary-button"
+                                onClick={downloadDocx}
+                            >
+                                Download DOCX
+                            </button>
+                        </div>
+                    </div>
+
                     <pre className="json-preview">{response.proposedMarkdown}</pre>
-                </>
+                </div>
             )}
         </div>
     );
 }
 
 export function MlAiPage() {
+    const initialSystemMessage: AgentMessage = {
+        id: createMessageId(),
+        role: "system",
+        text:
+            "FinSight AI Agent is ready. Upload files, ask for feature plans, documentation proposals, codebase-aware recommendations, or company standards. Uploads are scanned before they are used."
+    };
+
     const [message, setMessage] = React.useState(
         "Build a FinSight AI agent that lets employees upload code files, screenshots, and documents. Scan uploads, run them through Bronze Silver Gold ETL, and generate company standards for review."
     );
     const [uploadedFiles, setUploadedFiles] = React.useState<AgentUploadedFileResponse[]>([]);
     const [messages, setMessages] = React.useState<AgentMessage[]>([
-        {
-            id: crypto.randomUUID(),
-            role: "system",
-            text:
-                "FinSight AI Agent is ready. Upload files, ask for feature plans, documentation proposals, codebase-aware recommendations, or company standards. Uploads are scanned before they are used."
-        }
+        initialSystemMessage
     ]);
     const [isUploading, setIsUploading] = React.useState(false);
     const [isSending, setIsSending] = React.useState(false);
@@ -126,7 +219,7 @@ export function MlAiPage() {
             setMessages((current) => [
                 ...current,
                 {
-                    id: crypto.randomUUID(),
+                    id: createMessageId(),
                     role: "system",
                     text: `Uploaded ${uploadResult.originalFileName}. Scan status: ${uploadResult.scanResult.scanStatus}. Pipeline layer: ${uploadResult.pipelineLayer}.`,
                     upload: uploadResult
@@ -154,7 +247,7 @@ export function MlAiPage() {
             setError("");
 
             const userMessage: AgentMessage = {
-                id: crypto.randomUUID(),
+                id: createMessageId(),
                 role: "user",
                 text: trimmed
             };
@@ -170,7 +263,7 @@ export function MlAiPage() {
             });
 
             const agentMessage: AgentMessage = {
-                id: crypto.randomUUID(),
+                id: createMessageId(),
                 role: "agent",
                 text: response.answer,
                 response
@@ -188,6 +281,27 @@ export function MlAiPage() {
 
     function loadExamplePrompt(prompt: string) {
         setMessage(prompt);
+        setError("");
+    }
+
+    function clearInput() {
+        setMessage("");
+        setError("");
+    }
+
+    function resetChat() {
+        setUploadedFiles([]);
+        setError("");
+        setMessage("");
+
+        setMessages([
+            {
+                id: createMessageId(),
+                role: "system",
+                text:
+                    "FinSight AI Agent is ready. Upload files, ask for feature plans, documentation proposals, codebase-aware recommendations, or company standards. Uploads are scanned before they are used."
+            }
+        ]);
     }
 
     return (
@@ -239,9 +353,7 @@ export function MlAiPage() {
                     <aside className="ml-ai-side-panel">
                         <h3>Uploaded Files</h3>
 
-                        {uploadedFiles.length === 0 && (
-                            <p>No files uploaded yet.</p>
-                        )}
+                        {uploadedFiles.length === 0 && <p>No files uploaded yet.</p>}
 
                         {uploadedFiles.map((file) => (
                             <div key={file.fileId} className="ml-ai-upload-summary">
@@ -252,6 +364,30 @@ export function MlAiPage() {
                         ))}
 
                         <h3>Example Prompts</h3>
+
+                        <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={() =>
+                                loadExamplePrompt(
+                                    "Build a FinSight DOCX-style document that will eventually act as the company standard for all business units going forward. Include a UML diagram that shows connections and dependencies to and from other business logic units, services, controllers, DTOs, React pages, API clients, and database tables if used. Use Customers as the first example. This should remain a draft only until I review and approve it for Gold company knowledge."
+                                )
+                            }
+                        >
+                            DOCX Company Standard
+                        </button>
+
+                        <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={() =>
+                                loadExamplePrompt(
+                                    "Use this file as a reference / standard for unit tests. Treat the uploaded file as Bronze input, generate a Silver draft unit testing standard, and require human approval before promoting it to Gold company knowledge."
+                                )
+                            }
+                        >
+                            Unit Test Standard
+                        </button>
 
                         <button
                             type="button"
@@ -321,6 +457,24 @@ export function MlAiPage() {
                         placeholder="Ask FinSight AI anything..."
                         rows={4}
                     />
+
+                    <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={clearInput}
+                        disabled={isSending || isUploading || !message.trim()}
+                    >
+                        Clear Input
+                    </button>
+
+                    <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={resetChat}
+                        disabled={isSending || isUploading}
+                    >
+                        Reset Chat
+                    </button>
 
                     <button
                         type="button"

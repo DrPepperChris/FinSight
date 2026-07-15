@@ -20,4 +20,9 @@
     <ProjectReference Include="..\FinSight.Data\FinSight.Data.csproj" />
   </ItemGroup>
 
+    <ItemGroup>
+    <Compile Remove="App_Data\**\*.cs" />
+    <Content Remove="App_Data\**\*.cs" />
+    <None Include="App_Data\**\*" />
+  </ItemGroup>
 </Project>

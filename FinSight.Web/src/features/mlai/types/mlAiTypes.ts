@@ -139,3 +139,9 @@ export interface AgentUploadedFileResponse {
     pipelineStages: string[];
     uploadedAtUtc: string;
 }
+
+export interface AgentDocumentExportRequest {
+    fileName: string;
+    title: string;
+    markdown: string;
+}

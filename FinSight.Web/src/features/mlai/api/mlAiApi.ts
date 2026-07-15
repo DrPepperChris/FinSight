@@ -2,6 +2,7 @@
 import type {
     AgentChatRequest,
     AgentChatResponse,
+    AgentDocumentExportRequest,
     AgentUploadedFileResponse,
     AiGuardrailConfigResponse,
     CodebaseAnalysisRequest,
@@ -104,6 +105,20 @@ export async function chatWithAgent(
     const response = await apiClient.post<AgentChatResponse>(
         "/api/MlAi/agent/chat",
         request
+    );
+
+    return response.data;
+}
+
+export async function exportAgentDocumentDocx(
+    request: AgentDocumentExportRequest
+): Promise<Blob> {
+    const response = await apiClient.post(
+        "/api/MlAi/agent/export-docx",
+        request,
+        {
+            responseType: "blob"
+        }
     );
 
     return response.data;
