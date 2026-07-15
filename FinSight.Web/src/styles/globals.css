@@ -940,3 +940,232 @@ select {
         max-width: none;
     }
 }
+.ml-ai-grid {
+    grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 900px) {
+    .ml-ai-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ml-ai-warning-card {
+    border-left: 5px solid #f59e0b;
+}
+
+.ml-ai-grid {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+}
+
+.ml-ai-result-card {
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 0.75rem;
+    background: rgba(15, 23, 42, 0.02);
+}
+
+.ml-ai-result-card h3 {
+    margin-top: 0;
+}
+
+.ml-ai-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.75rem;
+    margin: 1rem 0;
+}
+
+.ml-ai-meta-item {
+    padding: 0.75rem;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-radius: 0.65rem;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.ml-ai-meta-item span {
+    display: block;
+    font-size: 0.8rem;
+    opacity: 0.75;
+    margin-bottom: 0.25rem;
+}
+
+.ml-ai-result-block {
+    margin-top: 1rem;
+}
+
+.ml-ai-result-block ul {
+    margin-top: 0.5rem;
+}
+
+.ml-ai-three-column {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.json-preview {
+    white-space: pre-wrap;
+    overflow-x: auto;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    background: rgba(15, 23, 42, 0.08);
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    margin-top: 0.75rem;
+}
+
+@media (max-width: 900px) {
+    .ml-ai-grid,
+    .ml-ai-three-column {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ml-ai-agent-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 1rem;
+    align-items: start;
+}
+
+.ml-ai-chat-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-height: 720px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.ml-ai-message {
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 0.9rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.ml-ai-message-user {
+    border-left: 5px solid #2563eb;
+}
+
+.ml-ai-message-agent {
+    border-left: 5px solid #16a34a;
+}
+
+.ml-ai-message-system {
+    border-left: 5px solid #f59e0b;
+}
+
+.ml-ai-message-role {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    opacity: 0.75;
+    margin-bottom: 0.5rem;
+}
+
+.ml-ai-side-panel {
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 0.9rem;
+    padding: 1rem;
+    background: rgba(15, 23, 42, 0.03);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.ml-ai-side-panel h3 {
+    margin: 0.5rem 0 0.25rem;
+}
+
+.ml-ai-upload-summary {
+    display: grid;
+    gap: 0.25rem;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    border-radius: 0.7rem;
+    padding: 0.75rem;
+}
+
+.ml-ai-upload-summary span,
+.ml-ai-upload-summary small {
+    opacity: 0.75;
+}
+
+.ml-ai-composer {
+    margin-top: 1rem;
+    display: grid;
+    grid-template-columns: 140px minmax(0, 1fr) 110px;
+    gap: 0.75rem;
+    align-items: stretch;
+}
+
+.ml-ai-composer textarea {
+    width: 100%;
+    resize: vertical;
+}
+
+.ml-ai-file-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.65rem;
+    border: 1px solid rgba(148, 163, 184, 0.45);
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.ml-ai-file-button input {
+    display: none;
+}
+
+.ml-ai-upload-card,
+.ml-ai-agent-response-card {
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-radius: 0.75rem;
+    background: rgba(15, 23, 42, 0.025);
+}
+
+.ml-ai-upload-header,
+.ml-ai-response-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.ml-ai-upload-header span,
+.ml-ai-response-header span {
+    opacity: 0.75;
+}
+
+@media (max-width: 1050px) {
+    .ml-ai-agent-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .ml-ai-composer {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ml-ai-document-output {
+    margin-top: 1rem;
+}
+
+.ml-ai-document-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.ml-ai-document-actions div {
+    display: flex;
+    gap: 0.5rem;
+}

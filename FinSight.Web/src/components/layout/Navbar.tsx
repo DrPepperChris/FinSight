@@ -61,15 +61,21 @@ export function Navbar() {
                     </NavLink>
                 )}
 
-                {!isAuthenticated && (
-                    <NavLink to="/login" className={getNavClass}>
-                        Login
-                    </NavLink>
-                )}
-
                 {isAuthenticated && hasRole(["Admin", "Auditor"]) && (
                     <NavLink to="/ingestion-engine" className={getNavClass}>
                         Ingestion Engine
+                    </NavLink>
+                )}
+
+                {isAuthenticated && hasRole(["Admin", "Auditor", "Analyst"]) && (
+                    <NavLink to="/ml-ai" className={getNavClass}>
+                        ML / AI
+                    </NavLink>
+                )}
+
+                {!isAuthenticated && (
+                    <NavLink to="/login" className={getNavClass}>
+                        Login
                     </NavLink>
                 )}
             </div>
@@ -78,7 +84,11 @@ export function Navbar() {
                 {isAuthenticated && (
                     <>
                         <span className="role-badge">{role ?? "User"}</span>
-                        <button type="button" className="button secondary-button" onClick={handleLogout}>
+                        <button
+                            type="button"
+                            className="button secondary-button"
+                            onClick={handleLogout}
+                        >
                             Logout
                         </button>
                     </>

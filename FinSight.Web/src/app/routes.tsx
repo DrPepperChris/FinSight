@@ -9,6 +9,7 @@ import { LoanApplicationsPage } from "../features/loans/pages/LoanApplicationsPa
 import { AuditLogsPage } from "../features/audit/pages/AuditLogsPage";
 import { AnalyticsPage } from "../features/analytics/pages/AnalyticsPage";
 import { IngestionEnginePage } from "../features/ingestion/pages/IngestionEnginePage";
+import { MlAiPage } from "../features/mlai/pages/MlAiPage";
 
 function UnauthorizedPage() {
     return (
@@ -92,6 +93,15 @@ export function AppRoutes() {
                 element={
                     <ProtectedRoute allowedRoles={["Admin", "Auditor"]}>
                         <IngestionEnginePage />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/ml-ai"
+                element={
+                    <ProtectedRoute allowedRoles={["Admin", "Auditor", "Analyst"]}>
+                        <MlAiPage />
                     </ProtectedRoute>
                 }
             />
