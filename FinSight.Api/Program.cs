@@ -1,4 +1,5 @@
-﻿using FinSight.Core.Services.AI;
+﻿using FinSight.Api.Services.AI;
+using FinSight.Core.Services.AI;
 using FinSight.Api.Filters;
 using FinSight.Api.Middleware;
 using FinSight.Core.Interfaces;
@@ -159,6 +160,12 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddScoped<IMlRiskScoringService, RuleBasedTransactionRiskScoringService>();
 builder.Services.AddScoped<IEnterpriseAiInsightService, EnterpriseAiInsightService>();
+builder.Services.AddScoped<IAiGuardrailService, AiGuardrailService>();
+builder.Services.AddScoped<ICodebaseContextService, CodebaseContextService>();
+builder.Services.AddScoped<IAgenticFeaturePlanningService, AgenticFeaturePlanningService>();
+builder.Services.AddScoped<IDocumentationProposalService, DocumentationProposalService>();
+builder.Services.AddScoped<IKnowledgeIngestionPipelineService, KnowledgeIngestionPipelineService>();
+builder.Services.AddScoped<IAgentOrchestrationService, AgentOrchestrationService>();
 var app = builder.Build();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
@@ -201,3 +208,5 @@ if (seedDemoData)
 }
 
 app.Run();
+
+

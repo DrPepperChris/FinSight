@@ -1,244 +1,336 @@
 ﻿import React from "react";
-import {
-    generateEnterpriseInsight,
-    scoreTransactionRisk
-} from "../api/mlAiApi";
+import { chatWithAgent, uploadAgentFile } from "../api/mlAiApi";
 import type {
-    EnterpriseAiInsightResponse,
-    TransactionRiskPredictionResponse
+    AgentChatResponse,
+    AgentUploadedFileResponse
 } from "../types/mlAiTypes";
 
+interface AgentMessage {
+    id: string;
+    role: "user" | "agent" | "system";
+    text: string;
+    response?: AgentChatResponse;
+    upload?: AgentUploadedFileResponse;
+}
+
+function ListBlock({ title, items }: { title: string; items?: string[] }) {
+    if (!items || items.length === 0) {
+        return null;
+    }
+
+    return (
+        <div className="ml-ai-result-block">
+            <strong>{title}</strong>
+            <ul>
+                {items.map((item) => (
+                    <li key={item}>{item}</li>
+                ))}
+            </ul>
+        </div>
+    );
+}
+
+function UploadStatusCard({ upload }: { upload: AgentUploadedFileResponse }) {
+    return (
+        <div className="ml-ai-upload-card">
+            <div className="ml-ai-upload-header">
+                <strong>{upload.originalFileName}</strong>
+                <span>{upload.uploadStatus}</span>
+            </div>
+
+            <div className="ml-ai-meta-grid">
+                <div className="ml-ai-meta-item">
+                    <span>Pipeline Layer</span>
+                    <strong>{upload.pipelineLayer}</strong>
+                </div>
+                <div className="ml-ai-meta-item">
+                    <span>Scan Status</span>
+                    <strong>{upload.scanResult.scanStatus}</strong>
+                </div>
+                <div className="ml-ai-meta-item">
+                    <span>Requires Review</span>
+                    <strong>{upload.scanResult.requiresReview ? "Yes" : "No"}</strong>
+                </div>
+                <div className="ml-ai-meta-item">
+                    <span>File Size</span>
+                    <strong>{upload.fileSizeBytes} bytes</strong>
+                </div>
+            </div>
+
+            <ListBlock title="Scan Findings" items={upload.scanResult.findings} />
+            <ListBlock title="Pipeline Stages" items={upload.pipelineStages} />
+            <ListBlock title="Upload Guardrails" items={upload.scanResult.guardrailsApplied} />
+        </div>
+    );
+}
+
+function AgentResponseCard({ response }: { response: AgentChatResponse }) {
+    return (
+        <div className="ml-ai-agent-response-card">
+            <div className="ml-ai-response-header">
+                <strong>{response.responseType}</strong>
+                <span>{new Date(response.generatedAtUtc).toLocaleString()}</span>
+            </div>
+
+            <p>{response.answer}</p>
+
+            <ListBlock title="Recommended Actions" items={response.recommendedActions} />
+            <ListBlock title="Pipeline Stages" items={response.pipelineStages} />
+            <ListBlock title="Guardrails Applied" items={response.guardrailsApplied} />
+            <ListBlock title="Files Considered" items={response.filesConsidered} />
+            <ListBlock title="Proposed Files" items={response.proposedFiles} />
+            <ListBlock title="Implementation Steps" items={response.implementationSteps} />
+
+            {response.proposedMarkdown && (
+                <>
+                    <strong>Proposed Markdown</strong>
+                    <pre className="json-preview">{response.proposedMarkdown}</pre>
+                </>
+            )}
+        </div>
+    );
+}
+
 export function MlAiPage() {
-    const [amount, setAmount] = React.useState("12500");
-    const [transactionType, setTransactionType] = React.useState("TransferOut");
-    const [description, setDescription] = React.useState("Urgent offshore wire transfer");
-    const [customerRiskRating, setCustomerRiskRating] = React.useState("High");
-
-    const [scenario, setScenario] = React.useState(
-        "A high-value outbound transaction was flagged for review."
+    const [message, setMessage] = React.useState(
+        "Build a FinSight AI agent that lets employees upload code files, screenshots, and documents. Scan uploads, run them through Bronze Silver Gold ETL, and generate company standards for review."
     );
-    const [question, setQuestion] = React.useState(
-        "What should an analyst review before approving this activity?"
-    );
-    const [signals, setSignals] = React.useState(
-        "High-value amount, outbound transfer, elevated customer risk, urgent wording"
-    );
-
-    const [riskResult, setRiskResult] =
-        React.useState<TransactionRiskPredictionResponse | null>(null);
-
-    const [insightResult, setInsightResult] =
-        React.useState<EnterpriseAiInsightResponse | null>(null);
-
-    const [loadingRisk, setLoadingRisk] = React.useState(false);
-    const [loadingInsight, setLoadingInsight] = React.useState(false);
+    const [uploadedFiles, setUploadedFiles] = React.useState<AgentUploadedFileResponse[]>([]);
+    const [messages, setMessages] = React.useState<AgentMessage[]>([
+        {
+            id: crypto.randomUUID(),
+            role: "system",
+            text:
+                "FinSight AI Agent is ready. Upload files, ask for feature plans, documentation proposals, codebase-aware recommendations, or company standards. Uploads are scanned before they are used."
+        }
+    ]);
+    const [isUploading, setIsUploading] = React.useState(false);
+    const [isSending, setIsSending] = React.useState(false);
     const [error, setError] = React.useState("");
 
-    async function handleScoreRisk() {
+    async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+        const file = event.target.files?.[0];
+
+        if (!file) {
+            return;
+        }
+
         try {
-            setLoadingRisk(true);
+            setIsUploading(true);
             setError("");
 
-            const result = await scoreTransactionRisk({
-                amount: Number(amount),
-                transactionType,
-                description,
-                customerRiskRating,
-                transactionDate: new Date().toISOString()
-            });
+            const uploadResult = await uploadAgentFile(file);
 
-            setRiskResult(result);
+            setUploadedFiles((current) => [...current, uploadResult]);
+
+            setMessages((current) => [
+                ...current,
+                {
+                    id: crypto.randomUUID(),
+                    role: "system",
+                    text: `Uploaded ${uploadResult.originalFileName}. Scan status: ${uploadResult.scanResult.scanStatus}. Pipeline layer: ${uploadResult.pipelineLayer}.`,
+                    upload: uploadResult
+                }
+            ]);
+
+            event.target.value = "";
         } catch (err) {
-            console.error("Failed to score transaction risk:", err);
-            setError("Failed to score transaction risk.");
+            console.error(err);
+            setError("Upload failed. The file may have been blocked by the demo scanner.");
         } finally {
-            setLoadingRisk(false);
+            setIsUploading(false);
         }
     }
 
-    async function handleGenerateInsight() {
+    async function handleSend() {
+        const trimmed = message.trim();
+
+        if (!trimmed) {
+            return;
+        }
+
         try {
-            setLoadingInsight(true);
+            setIsSending(true);
             setError("");
 
-            const result = await generateEnterpriseInsight({
-                businessArea: "Transactions",
-                scenario,
-                userQuestion: question,
-                dataSignals: signals
-                    .split(",")
-                    .map((signal) => signal.trim())
-                    .filter(Boolean)
+            const userMessage: AgentMessage = {
+                id: crypto.randomUUID(),
+                role: "user",
+                text: trimmed
+            };
+
+            setMessages((current) => [...current, userMessage]);
+
+            const response = await chatWithAgent({
+                message: trimmed,
+                uploadedFileIds: uploadedFiles.map((file) => file.fileId),
+                includeCodebaseContext: true,
+                generateDocumentationProposal: true,
+                generateFeaturePlan: true
             });
 
-            setInsightResult(result);
+            const agentMessage: AgentMessage = {
+                id: crypto.randomUUID(),
+                role: "agent",
+                text: response.answer,
+                response
+            };
+
+            setMessages((current) => [...current, agentMessage]);
+            setMessage("");
         } catch (err) {
-            console.error("Failed to generate enterprise insight:", err);
-            setError("Failed to generate enterprise insight.");
+            console.error(err);
+            setError("Agent request failed.");
         } finally {
-            setLoadingInsight(false);
+            setIsSending(false);
         }
+    }
+
+    function loadExamplePrompt(prompt: string) {
+        setMessage(prompt);
     }
 
     return (
         <main className="page">
             <div className="page-header">
-                <h1>ML / AI Risk Platform</h1>
+                <h1>FinSight AI Agent</h1>
                 <p>
-                    Enterprise-style transaction risk scoring and AI-assisted
-                    operational insight review with human-in-the-loop guardrails.
+                    Chat-style enterprise AI assistant with file upload scanning,
+                    Bronze/Silver/Gold pipeline stages, guardrails, and reviewable
+                    implementation outputs.
                 </p>
             </div>
 
-            {error && <p className="error">{error}</p>}
+            <section className="card ml-ai-warning-card">
+                <h2>Decision Support Only</h2>
+                <p>
+                    Uploaded files are scanned before use. Agent responses are reviewable
+                    proposals only and do not modify production code, documentation,
+                    customer records, transactions, or financial decisions.
+                </p>
+            </section>
 
-            <div className="cards ml-ai-grid">
-                <section className="card">
-                    <h2>Transaction Risk Scoring</h2>
-                    <p>
-                        Demonstrates a safe ML service boundary for fraud, risk,
-                        and analyst-review workflows.
-                    </p>
+            <section className="card">
+                <h2>Agent Workspace</h2>
 
-                    <div className="form">
-                        <label>
-                            Amount
-                            <input
-                                value={amount}
-                                onChange={(event) => setAmount(event.target.value)}
-                            />
-                        </label>
-
-                        <label>
-                            Transaction Type
-                            <select
-                                value={transactionType}
-                                onChange={(event) => setTransactionType(event.target.value)}
+                <div className="ml-ai-agent-shell">
+                    <div className="ml-ai-chat-panel">
+                        {messages.map((item) => (
+                            <div
+                                key={item.id}
+                                className={`ml-ai-message ml-ai-message-${item.role}`}
                             >
-                                <option value="Deposit">Deposit</option>
-                                <option value="Withdrawal">Withdrawal</option>
-                                <option value="TransferIn">Transfer In</option>
-                                <option value="TransferOut">Transfer Out</option>
-                            </select>
-                        </label>
+                                <div className="ml-ai-message-role">
+                                    {item.role === "user"
+                                        ? "You"
+                                        : item.role === "agent"
+                                          ? "FinSight Agent"
+                                          : "System"}
+                                </div>
 
-                        <label>
-                            Description
-                            <input
-                                value={description}
-                                onChange={(event) => setDescription(event.target.value)}
-                            />
-                        </label>
+                                <p>{item.text}</p>
 
-                        <label>
-                            Customer Risk Rating
-                            <select
-                                value={customerRiskRating}
-                                onChange={(event) => setCustomerRiskRating(event.target.value)}
-                            >
-                                <option value="Low">Low</option>
-                                <option value="Medium">Medium</option>
-                                <option value="High">High</option>
-                            </select>
-                        </label>
+                                {item.upload && <UploadStatusCard upload={item.upload} />}
+                                {item.response && <AgentResponseCard response={item.response} />}
+                            </div>
+                        ))}
+                    </div>
+
+                    <aside className="ml-ai-side-panel">
+                        <h3>Uploaded Files</h3>
+
+                        {uploadedFiles.length === 0 && (
+                            <p>No files uploaded yet.</p>
+                        )}
+
+                        {uploadedFiles.map((file) => (
+                            <div key={file.fileId} className="ml-ai-upload-summary">
+                                <strong>{file.originalFileName}</strong>
+                                <span>{file.uploadStatus}</span>
+                                <small>{file.scanResult.scanStatus}</small>
+                            </div>
+                        ))}
+
+                        <h3>Example Prompts</h3>
 
                         <button
                             type="button"
-                            onClick={handleScoreRisk}
-                            disabled={loadingRisk}
+                            className="secondary-button"
+                            onClick={() =>
+                                loadExamplePrompt(
+                                    "Analyze the uploaded files and propose company coding and documentation standards using Bronze Silver Gold ETL."
+                                )
+                            }
                         >
-                            {loadingRisk ? "Scoring..." : "Score Risk"}
+                            Standards from Uploads
                         </button>
-                    </div>
-
-                    {riskResult && (
-                        <div className="dashboard-section">
-                            <div className="card">
-                                <h2>{riskResult.riskLevel}</h2>
-                                <p>Risk Score: {riskResult.riskScore}</p>
-                                <p>
-                                    Requires Review:{" "}
-                                    {riskResult.requiresReview ? "Yes" : "No"}
-                                </p>
-                                <p>Model Version: {riskResult.modelVersion}</p>
-
-                                <strong>Reasons</strong>
-                                <ul>
-                                    {riskResult.reasons.map((reason) => (
-                                        <li key={reason}>{reason}</li>
-                                    ))}
-                                </ul>
-                            </div>
-                        </div>
-                    )}
-                </section>
-
-                <section className="card">
-                    <h2>AI-Assisted Enterprise Insight</h2>
-                    <p>
-                        Demonstrates guardrailed AI assistance for analyst support,
-                        documentation, and operational troubleshooting.
-                    </p>
-
-                    <div className="form">
-                        <label>
-                            Scenario
-                            <input
-                                value={scenario}
-                                onChange={(event) => setScenario(event.target.value)}
-                            />
-                        </label>
-
-                        <label>
-                            User Question
-                            <input
-                                value={question}
-                                onChange={(event) => setQuestion(event.target.value)}
-                            />
-                        </label>
-
-                        <label>
-                            Data Signals
-                            <input
-                                value={signals}
-                                onChange={(event) => setSignals(event.target.value)}
-                            />
-                        </label>
 
                         <button
                             type="button"
-                            onClick={handleGenerateInsight}
-                            disabled={loadingInsight}
+                            className="secondary-button"
+                            onClick={() =>
+                                loadExamplePrompt(
+                                    "Create a reuse-first implementation plan for a new feature using existing controllers, services, DTOs, and React patterns."
+                                )
+                            }
                         >
-                            {loadingInsight ? "Generating..." : "Generate Insight"}
+                            Reuse-First Feature Plan
                         </button>
-                    </div>
 
-                    {insightResult && (
-                        <div className="dashboard-section">
-                            <div className="card">
-                                <h2>Insight</h2>
-                                <p>{insightResult.summary}</p>
-                                <p>Confidence: {insightResult.confidenceLevel}</p>
+                        <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={() =>
+                                loadExamplePrompt(
+                                    "Generate documentation for this feature using the existing FinSight documentation format and naming conventions."
+                                )
+                            }
+                        >
+                            Documentation Proposal
+                        </button>
 
-                                <strong>Recommended Actions</strong>
-                                <ul>
-                                    {insightResult.recommendedActions.map((action) => (
-                                        <li key={action}>{action}</li>
-                                    ))}
-                                </ul>
+                        <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={() =>
+                                loadExamplePrompt(
+                                    "Explain how this AI agent should be deployed to Azure using Blob Storage, Azure AI Search, Azure OpenAI, SQL, and Application Insights."
+                                )
+                            }
+                        >
+                            Azure Deployment Plan
+                        </button>
+                    </aside>
+                </div>
 
-                                <strong>Guardrails Applied</strong>
-                                <ul>
-                                    {insightResult.guardrailsApplied.map((guardrail) => (
-                                        <li key={guardrail}>{guardrail}</li>
-                                    ))}
-                                </ul>
-                            </div>
-                        </div>
-                    )}
-                </section>
-            </div>
+                {error && <p className="error">{error}</p>}
+
+                <div className="ml-ai-composer">
+                    <label className="ml-ai-file-button">
+                        {isUploading ? "Uploading..." : "Attach File"}
+                        <input
+                            type="file"
+                            onChange={handleFileChange}
+                            disabled={isUploading || isSending}
+                        />
+                    </label>
+
+                    <textarea
+                        value={message}
+                        onChange={(event) => setMessage(event.target.value)}
+                        placeholder="Ask FinSight AI anything..."
+                        rows={4}
+                    />
+
+                    <button
+                        type="button"
+                        onClick={handleSend}
+                        disabled={isSending || isUploading || !message.trim()}
+                    >
+                        {isSending ? "Sending..." : "Send"}
+                    </button>
+                </div>
+            </section>
         </main>
     );
 }
