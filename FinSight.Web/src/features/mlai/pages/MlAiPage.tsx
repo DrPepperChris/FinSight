@@ -305,7 +305,7 @@ export function MlAiPage() {
     }
 
     return (
-        <main className="page">
+        <main className="page ml-ai-page">
             <div className="page-header">
                 <h1>FinSight AI Agent</h1>
                 <p>
@@ -324,9 +324,7 @@ export function MlAiPage() {
                 </p>
             </section>
 
-            <section className="card">
-                <h2>Agent Workspace</h2>
-
+            <section className="ml-ai-workspace">
                 <div className="ml-ai-agent-shell">
                     <div className="ml-ai-chat-panel">
                         {messages.map((item) => (

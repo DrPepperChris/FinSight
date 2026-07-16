@@ -718,7 +718,7 @@ export function IngestionEnginePage() {
     );
 
     return (
-        <main className="page">
+        <main className="page ingestion-page">
             <div className="page-header">
                 <h1>Ingestion Engine</h1>
                 <p>
