@@ -1,53 +1,93 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
+# Build, test, and deploy FinSight.Api to Azure App Service
 
-name: Build and deploy ASP.Net Core app to Azure Web App - finsight-api-cw-2026
+name: Build and deploy FinSight API
 
 on:
   push:
     branches:
       - master
+    paths:
+      - "FinSight.Api/**"
+      - "FinSight.Core/**"
+      - "FinSight.Data/**"
+      - "FinSight.Tests/**"
+      - ".github/workflows/master_finsight-api-cw-2026.yml"
+
   workflow_dispatch:
+
+env:
+  API_PROJECT: ./FinSight.Api/FinSight.Api.csproj
+  TEST_PROJECT: ./FinSight.Tests/FinSight.Tests.csproj
+  PUBLISH_DIRECTORY: ${{ github.workspace }}/api-publish
+  ARTIFACT_NAME: finsight-api
 
 jobs:
   build:
+    name: Build and test API
     runs-on: windows-latest
+
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Set up .NET Core
+      - name: Set up .NET 8
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.x'
+          dotnet-version: "8.0.x"
 
-      - name: Build with dotnet
-        run: dotnet build --configuration Release
+      - name: Restore API
+        run: dotnet restore "${{ env.API_PROJECT }}"
 
-      - name: dotnet publish
-        run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
+      - name: Restore tests
+        run: dotnet restore "${{ env.TEST_PROJECT }}"
 
-      - name: Upload artifact for deployment job
+      - name: Build API
+        run: >
+          dotnet build "${{ env.API_PROJECT }}"
+          --configuration Release
+          --no-restore
+
+      - name: Run tests
+        run: >
+          dotnet test "${{ env.TEST_PROJECT }}"
+          --configuration Release
+          --no-restore
+          --verbosity normal
+
+      - name: Publish API
+        run: >
+          dotnet publish "${{ env.API_PROJECT }}"
+          --configuration Release
+          --no-restore
+          --output "${{ env.PUBLISH_DIRECTORY }}"
+
+      - name: Upload API artifact
         uses: actions/upload-artifact@v4
         with:
-          name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.PUBLISH_DIRECTORY }}
+          if-no-files-found: error
+          retention-days: 7
 
   deploy:
+    name: Deploy API to Azure
     runs-on: windows-latest
     needs: build
+
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
-      - name: Download artifact from build job
+      - name: Download API artifact
         uses: actions/download-artifact@v4
         with:
-          name: .net-app
-      
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ./api-publish
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -55,11 +95,10 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_236B811EF43547E796E030927E27958B }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_96BFFFAC98CA4D0D8B26B47B4B41DF9E }}
 
-      - name: Deploy to Azure Web App
+      - name: Deploy to Azure App Service
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'finsight-api-cw-2026'
-          slot-name: 'Production'
-          package: .
-          
+          app-name: finsight-api-cw-2026
+          slot-name: Production
+          package: ./api-publish
