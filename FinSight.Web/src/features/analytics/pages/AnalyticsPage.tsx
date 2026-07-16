@@ -56,7 +56,7 @@ const analyticsMetrics: AnalyticsMetric[] = [
 
 export function AnalyticsPage() {
     return (
-        <main className="page">
+        <main className="page analytics-page">
             <div className="page-header">
                 <h1>Databricks Analytics</h1>
                 <p>
